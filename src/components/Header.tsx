@@ -24,16 +24,16 @@ export function Header() {
             className="h-10 w-auto shrink-0 sm:h-14"
           />
           <span className="min-w-0 leading-none">
-            <span className="block truncate text-lg font-extrabold tracking-tight sm:text-2xl">
+            <span className="block truncate text-lg font-extrabold tracking-tight whitespace-nowrap sm:text-2xl">
               Lab Ladies
             </span>
-            <span className="hidden text-xs font-bold tracking-[0.14em] text-brand-ink uppercase xs:block sm:text-sm">
+            <span className="hidden whitespace-nowrap text-xs font-bold tracking-[0.14em] text-brand-ink uppercase xs:block sm:text-sm">
               Mobile Lab Services
             </span>
           </span>
         </Link>
 
-        <nav aria-label="Main" className="ml-auto hidden items-center gap-1 lg:flex">
+        <nav aria-label="Main" className="ml-auto hidden items-center gap-0.5 xl:flex">
           {nav.map((item) => {
             const active =
               item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
@@ -42,7 +42,7 @@ export function Header() {
                 key={item.href}
                 href={item.href}
                 aria-current={active ? "page" : undefined}
-                className={`rounded-full px-4 py-2.5 text-base font-bold transition-colors ${
+                className={`rounded-full px-3 py-2.5 text-base font-bold whitespace-nowrap transition-colors ${
                   active ? "bg-cream text-brand-ink" : "text-ink hover:bg-cream"
                 }`}
               >
@@ -54,7 +54,7 @@ export function Header() {
 
         <a
           href={site.phoneHref}
-          className="ml-auto inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full bg-brand px-4 text-base font-bold text-white transition-colors hover:bg-brand-deep sm:px-5 lg:ml-3"
+          className="ml-auto inline-flex min-h-12 shrink-0 items-center gap-2 rounded-full bg-brand px-4 text-base font-bold text-white transition-colors hover:bg-brand-deep sm:px-5 xl:ml-3"
         >
           <PhoneIcon className="h-5 w-5" />
           <span className="hidden sm:inline">{site.phone}</span>
@@ -66,7 +66,7 @@ export function Header() {
           onClick={() => setOpen((v) => !v)}
           aria-expanded={open}
           aria-controls="mobile-nav"
-          className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full ring-2 ring-cream-deep lg:hidden"
+          className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-full ring-2 ring-cream-deep xl:hidden"
         >
           <span className="sr-only">{open ? "Close menu" : "Open menu"}</span>
           <svg viewBox="0 0 24 24" aria-hidden className="h-6 w-6">
@@ -93,7 +93,7 @@ export function Header() {
         <nav
           id="mobile-nav"
           aria-label="Mobile"
-          className="border-t border-cream-deep bg-white px-5 pb-4 lg:hidden"
+          className="border-t border-cream-deep bg-white px-5 pb-4 xl:hidden"
         >
           {nav.map((item) => (
             <Link
