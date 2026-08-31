@@ -16,23 +16,23 @@ import { site, whyChooseUs } from "@/lib/site";
 export const metadata: Metadata = {
   title: "About Us",
   description:
-    "Lab Ladies is nurse-owned and operated by Michelle Goldberg, RN, BSN and Sandra, a laboratory supervisor with 25+ years of experience serving South Florida.",
+    "Lab Ladies is nurse-owned and operated by Michelle G., RN, BSN and Sandra S., a laboratory supervisor with 25+ years of experience serving South Florida.",
   alternates: { canonical: "/about" },
 };
 
 const founders = [
   {
-    name: "Michelle Goldberg, RN, BSN",
+    name: "Michelle G., RN, BSN",
     role: "Co-Founder · Registered Nurse",
     paragraphs: [
-      "My name is Michelle Goldberg, and I have dedicated the past 30 years to caring for older adults and helping patients and their families navigate the complexities of healthcare.",
+      "My name is Michelle, and I have dedicated the past 30 years to caring for older adults and helping patients and their families navigate the complexities of healthcare.",
       "Throughout my career in geriatric nursing and case management, I have specialized in patient advocacy, medication management, care coordination, and patient and family education. I am passionate about communicating healthcare information in a way that is easy to understand, empowering patients and their loved ones to make informed decisions and feel confident in their care.",
       "I am a Registered Nurse with a Bachelor of Science in Nursing (BSN), licensed to practice nursing in Florida and New York, and I hold a multi-state Compact Nursing License, allowing me to provide nursing services across participating compact states.",
       "After three decades in nursing, my commitment remains the same: to provide compassionate, personalized care, build trusted relationships, and improve the overall healthcare experience for every patient and family we encounter.",
     ],
   },
   {
-    name: "Sandra Semoy",
+    name: "Sandra S.",
     role: "Co-Owner · Laboratory Supervisor",
     paragraphs: [
       "Hello, I'm Sandra, co-owner of Lab Ladies.",

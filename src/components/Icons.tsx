@@ -163,8 +163,35 @@ export function StarIcon({ className = "h-6 w-6" }: IconProps) {
   );
 }
 
+export function SpaIcon({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden className={className}>
+      <path
+        d="M12 21c0-5 2.6-9.2 7-11-.6 5.6-3.2 9.4-7 11Zm0 0c0-5-2.6-9.2-7-11 .6 5.6 3.2 9.4 7 11Z"
+        fill="currentColor"
+      />
+      <path d="M12 21v-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="12" cy="5" r="2.4" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function CourierIcon({ className = base }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden className={className}>
+      <path d="M2 7.5h11V16H2V7.5Z" fill="currentColor" />
+      <path d="M13 10.5h4.4L21 13.6V16h-8v-5.5Z" fill="currentColor" />
+      <circle cx="7" cy="17.5" r="2.2" fill="currentColor" />
+      <circle cx="17.5" cy="17.5" r="2.2" fill="currentColor" />
+      <path d="M6 10.2h3M7.5 8.7v3" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export const partnerIcons = {
   provider: ProviderIcon,
   home: HomeIcon,
   school: SchoolIcon,
+  spa: SpaIcon,
+  courier: CourierIcon,
 };

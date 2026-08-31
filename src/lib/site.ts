@@ -20,6 +20,8 @@ export const site = {
 export const nav = [
   { href: "/", label: "Home" },
   { href: "/services", label: "Services" },
+  { href: "/pcr-testing", label: "PCR Testing" },
+  { href: "/pricing", label: "Pricing" },
   { href: "/about", label: "About Us" },
   { href: "/contact", label: "Contact" },
 ] as const;
@@ -48,6 +50,7 @@ export const specializedServices = [
   "Concierge Mobile Diagnostic Services for Older Adults",
 ] as const;
 
+/** Individuals who use the service. Organizations live in `partners`. */
 export const whoWeServe = [
   "Older adults",
   "Concierge medical patients",
@@ -56,14 +59,12 @@ export const whoWeServe = [
   "Individuals recovering from illness or surgery",
   "Seasonal residents",
   "Busy professionals",
-  "Families with young children",
   "People who prefer privacy and convenience",
-  "Employers needing workplace collections",
 ] as const;
 
 export const partners = [
   {
-    title: "Doctor Offices & Medical Providers",
+    title: "Concierge Medical Practices & Doctor Offices",
     icon: "provider" as const,
     points: [
       "Fast Mobile Lab Services",
@@ -89,6 +90,24 @@ export const partners = [
       "Drug Testing Services",
     ],
   },
+  {
+    title: "Med Spas & Gyms",
+    icon: "spa" as const,
+    points: [
+      "On-Site Client Collections",
+      "Wellness & Performance Panels",
+      "Discreet, Professional Service",
+    ],
+  },
+  {
+    title: "Medical Courier Services",
+    icon: "courier" as const,
+    points: [
+      "Hire Us for Contracted Pickups",
+      "Specimen Transport to Reference Laboratories",
+      "Reliable Chain-of-Custody Handling",
+    ],
+  },
 ] as const;
 
 export const appointmentWindows = [
@@ -102,7 +121,7 @@ export const services = [
   {
     slug: "lab-tests",
     title: "All Lab Tests",
-    summary: "Results within 24–48 hours.",
+    summary: "Results within 24-48 hours.",
     body: "Routine and comprehensive laboratory panels collected wherever you are — at home, at the office, or in a senior living community. Specimens are transported promptly to accredited reference laboratories, and we follow through until the ordering physician has the results.",
     points: [
       "Routine and comprehensive blood panels",
@@ -126,38 +145,72 @@ export const services = [
   {
     slug: "pcr-testing",
     title: "Advanced PCR Testing",
-    summary: "Rapid, often same-day results.",
-    body: "PCR molecular diagnostics are our specialty. We collect for advanced respiratory, urine, wound and GI PCR testing, and we work closely with providers and facility staff to choose the right collection method for each patient.",
+    summary: "Our specialty. Rapid, often same-day results.",
+    body: "PCR molecular diagnostics are what set Lab Ladies apart. We collect for advanced respiratory, urine, wound and GI PCR testing, including specialized collection methods for patients who cannot provide a clean-catch specimen.",
     points: [
       "Urine PCR — including complicated UTIs",
       "Respiratory PCR — Flu / COVID / RSV / Strep and more",
       "Wound PCR",
       "GI PCR — including C. diff",
     ],
+    href: "/pcr-testing",
   },
   {
     slug: "drug-testing",
     title: "Drug Testing",
-    summary: "For employers, campuses and clinical use.",
-    body: "Confidential drug screen collection on site — for workplaces, colleges and universities, and clinical monitoring.",
+    summary: "For campuses, clinics and organizations.",
+    body: "Confidential drug screen collection performed on site — for colleges and universities, clinical monitoring, and organizations that need testing done where their people already are.",
     points: [
-      "Workplace collections",
+      "On-site collections",
       "On-campus collections",
       "Confidential and respectful process",
     ],
   },
   {
-    slug: "blood-typing",
-    title: "Blood Typing",
-    summary: "Simple, convenient, at your location.",
-    body: "Blood typing collected in the comfort of your preferred setting, with the same nurse-led standard of care.",
-    points: ["Collected at home or on site", "Nurse-performed draw"],
-  },
-  {
     slug: "std-rapid-testing",
     title: "STD Rapid Testing",
     summary: "Private and discreet.",
-    body: "Rapid testing collection handled with complete privacy and professionalism.",
-    points: ["Discreet, private collection", "Fast turnaround"],
+    body: "Rapid testing collection handled with complete privacy and professionalism, in the comfort of your own home.",
+    points: ["Discreet, private collection", "Fast turnaround", "Self-pay — no physician order needed"],
+  },
+  {
+    slug: "gender-reveal",
+    title: "Gender Reveal DNA Testing",
+    summary: "Find out early, from the comfort of home.",
+    body: "A simple blood collection for early gender DNA testing — performed at your home by an experienced Registered Nurse, so you can skip the lab waiting room entirely.",
+    points: [
+      "Collected at home by an RN",
+      "Self-pay — no physician order needed",
+      "Discreet and comfortable",
+    ],
   },
 ] as const;
+
+export const pricing = {
+  headline: "Simple, transparent, self-pay pricing.",
+  policies: [
+    {
+      title: "Self-Pay — No Physician Order Needed",
+      body: "Many of our tests are available self-pay, which means you can request testing yourself without an order from a doctor. Just call us and we will walk you through what is available.",
+    },
+    {
+      title: "We Do Not Bill Insurance",
+      body: "Lab Ladies does not bill insurance for our services. Our mobile collection fee is paid directly to us. The laboratory that performs your testing handles its own billing separately.",
+    },
+    {
+      title: "Travel Fee",
+      body: "A travel fee may apply depending on your location within Palm Beach and Broward County. We will always confirm any travel fee with you before your appointment — no surprises.",
+    },
+  ],
+  /** Set `price` to a string (e.g. "$75") once the client confirms rates. */
+  rows: [
+    { service: "Mobile blood draw / specimen collection", price: null },
+    { service: "All lab tests (routine & comprehensive panels)", price: null },
+    { service: "Culture & sensitivity testing", price: null },
+    { service: "Advanced PCR testing", price: null },
+    { service: "Drug testing", price: null },
+    { service: "STD rapid testing", price: null },
+    { service: "Gender reveal DNA testing", price: null },
+    { service: "Medical courier / contracted pickups", price: null },
+  ] as { service: string; price: string | null }[],
+};

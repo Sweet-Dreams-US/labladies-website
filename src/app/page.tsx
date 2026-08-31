@@ -131,7 +131,7 @@ export default function HomePage() {
                 Rapid, often same-day results.
               </p>
               <div className="mt-8">
-                <SectionTab href="/services#pcr-testing">See PCR Services</SectionTab>
+                <SectionTab href="/pcr-testing">Explore PCR Testing</SectionTab>
               </div>
             </div>
             <Card className="bg-white">
@@ -168,9 +168,9 @@ export default function HomePage() {
         <Section>
           <Eyebrow>Who We Partner With</Eyebrow>
           <Heading>
-            Bringing mobile lab services to providers, communities and campuses
+            Bringing mobile lab services to providers, communities, campuses and businesses
           </Heading>
-          <div className="mt-10 grid gap-6 md:grid-cols-3">
+          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {partners.map((partner) => {
               const Icon = partnerIcons[partner.icon];
               return (
@@ -182,8 +182,9 @@ export default function HomePage() {
               );
             })}
           </div>
-          <div className="mt-10">
+          <div className="mt-10 flex flex-wrap gap-3">
             <SectionTab href="/contact">Partner With Us</SectionTab>
+            <CallButton variant="secondary" />
           </div>
         </Section>
       </div>
@@ -199,6 +200,9 @@ export default function HomePage() {
               what you need and we&rsquo;ll find a time that works.
             </Lead>
             <p className="mt-4 font-semibold text-muted">{site.travelNote}</p>
+            <div className="mt-8">
+              <SectionTab href="/pricing">See Pricing</SectionTab>
+            </div>
           </div>
           <Card className="bg-cream">
             <ClockIcon className="h-11 w-11 text-brand" />

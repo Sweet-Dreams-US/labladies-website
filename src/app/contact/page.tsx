@@ -112,7 +112,7 @@ export default function ContactPage() {
           </Lead>
           <CheckList
             items={[
-              "The lab order from your physician or practitioner",
+              "The lab order from your physician or practitioner (not needed for self-pay testing)",
               "The patient's name, date of birth and address",
               "Any fasting requirements on the order",
               "A phone number for the ordering provider",

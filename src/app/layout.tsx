@@ -61,8 +61,9 @@ const jsonLd = {
     "Advanced PCR testing collection",
     "Culture and sensitivity collection",
     "Drug testing",
-    "Blood typing",
     "STD rapid testing",
+    "Gender reveal DNA testing",
+    "Medical courier services",
   ].map((name) => ({ "@type": "MedicalTest", name })),
 };
 
