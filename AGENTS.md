@@ -42,6 +42,22 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   if the client sends real photos, drop them in `public/` and add them as brand slots.
 - `site.googleReviewUrl` in `src/lib/site.ts` is a search-URL placeholder — swap for the
   real Google Business Profile review link once the profile exists.
+- **Owners are named by first name + last initial only** (Michelle G., Sandra S.). Do not
+  publish their surnames anywhere on the site.
+- **Say what we do, never what we don't.** No "we don't treat X" phrasing anywhere. In
+  particular, pediatrics is out of scope — handle that by simply not mentioning children,
+  never by stating an exclusion.
+- **No children anywhere.** No kids, no families-with-young-children, no pediatric copy.
+- **No blood typing** — removed at the client's request.
+- **Gender reveal DNA testing is an active service** and should stay listed.
+- **No "workplace collections"** as an audience or service — the Medical Courier offering
+  covers contracted pickups instead.
+- Audiences to reflect: senior living communities, concierge medical practices, older
+  adults, universities, med spas, gyms, plus medical courier clients.
+- **Pricing page rules:** self-pay means **no physician order is needed**; Lab Ladies
+  **does not bill insurance** (the performing laboratory does its own billing); a travel
+  fee may apply. Rates live in `pricing.rows` in `src/lib/site.ts` — each row renders
+  "Call for pricing" until `price` is set to a string.
 
 **Design references the client named**
 - mobilephlebotomyservicesfl.com — "a tab under each section that takes you to another
