@@ -3,10 +3,14 @@
 Everything below is what has to happen outside the code for the tracking board
 and the blog to be live.
 
-## 1. Environment variables (Vercel → Settings → Environment Variables)
+**Status: deployed to production 22 Sep 2026.** The board is live at
+<https://labladies-website.vercel.app/admin> with Michelle's 17 rows loaded.
+Everything in section 1 is already set; sections 2–4 are still outstanding.
 
-Set these on **Production** and **Preview**. They are all server-only — none of
-them may be prefixed `NEXT_PUBLIC_`.
+## 1. Environment variables — DONE
+
+Set on Production, Preview and Development. All server-only — none of them may
+be prefixed `NEXT_PUBLIC_`.
 
 | Variable | Value | Notes |
 |---|---|---|
@@ -17,8 +21,8 @@ them may be prefixed `NEXT_PUBLIC_`.
 | `ADMIN_PASSCODE` | in `.env.local` | The password half |
 | `ALERT_EMAIL_TO` | `labladies2026@gmail.com` | Where overdue alerts go |
 | `ALERT_FROM` | `Lab Ladies <alerts@labladies.net>` | Needs the domain verified in Resend |
-| `RESEND_API_KEY` | *(not set yet)* | **Until this is set, alerts log instead of sending** |
-| `CRON_SECRET` | generate a random string | Vercel signs the nightly cron with it |
+| `RESEND_API_KEY` | **still not set** | **Until this is set, alerts log instead of sending** |
+| `CRON_SECRET` | set | Vercel signs the nightly cron with it |
 
 The live values for `SUPABASE_ADMIN_TOKEN` and `ADMIN_PASSCODE` are in
 `.env.local`, which is gitignored. Give Michelle the password directly — by
@@ -34,13 +38,18 @@ recorded as data on the encounter rather than inferred from who was logged in.
 If the team grows to where "who changed this" matters, `src/lib/admin-auth.ts`
 is the file that grows a users table.
 
-## 2. Turn the alert emails on
+## 2. Turn the alert emails on — OUTSTANDING
+
+The cron is deployed and running weekdays at 12:00 UTC (8am ET), but with no
+`RESEND_API_KEY` it logs what it would have sent instead of sending. It also
+does not mark those alerts as sent, so nothing is lost — the moment the key is
+added, the backlog goes out on the next run.
 
 1. Add the Resend API key as `RESEND_API_KEY`.
-2. Verify `labladies.net` in Resend so mail can come from `alerts@labladies.net`
-   rather than the `onboarding@resend.dev` fallback.
-3. Set `CRON_SECRET`.
-4. Redeploy. The cron in `vercel.json` runs weekdays at 12:00 UTC (8am ET).
+2. Verify `labladies.net` in Resend, then change `ALERT_FROM` to
+   `Lab Ladies <alerts@labladies.net>` — it is currently the
+   `onboarding@resend.dev` fallback.
+3. Redeploy.
 
 To test it by hand, sign into `/admin` and visit `/api/cron/alerts` — it
 returns JSON saying how many alerts fired and whether the mail sent.
