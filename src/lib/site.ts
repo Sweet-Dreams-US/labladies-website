@@ -23,6 +23,7 @@ export const nav = [
   { href: "/pcr-testing", label: "PCR Testing" },
   { href: "/pricing", label: "Pricing" },
   { href: "/about", label: "About Us" },
+  { href: "/blog", label: "Blog" },
   { href: "/contact", label: "Contact" },
 ] as const;
 
