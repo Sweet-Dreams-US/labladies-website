@@ -4,27 +4,34 @@ import { cookies } from "next/headers";
 /**
  * Admin session for the Lab Ladies tracking board.
  *
- * One shared passcode (ADMIN_PASSCODE) exchanged for an HMAC-signed httpOnly
- * cookie — the same model the other Sweet Dreams sites use. Michelle, Sandra
- * and the office share it; who actually drew the blood is recorded as data on
- * the encounter (the phlebotomist field), not inferred from the login.
+ * Sign-in is the business email (ADMIN_EMAIL) plus a shared password
+ * (ADMIN_PASSCODE), exchanged for an HMAC-signed httpOnly cookie.
  *
- * The signing secret is derived from the passcode, so rotating the passcode
+ * The email is a second thing you have to know rather than a user account —
+ * there is one shared credential, not a users table. Michelle, Sandra and the
+ * office use the same one; who actually drew the blood is recorded as data on
+ * the encounter (the phlebotomist field), never inferred from the login. When
+ * the team grows enough that "who changed this" matters, this is the file that
+ * grows a users table, and the Activity page already has somewhere to put the
+ * answer.
+ *
+ * The signing secret is derived from both values, so changing either one
  * invalidates every outstanding session for free.
  *
- * Session length is deliberately shorter than the other sites': this board
- * carries patient names, and it is used on a phone in the field.
+ * Session length is deliberately shorter than the other Sweet Dreams sites':
+ * this board carries patient names, and it gets used on a phone in the field.
  */
 
 const COOKIE = "ll_admin";
 const TTL_MS = 1000 * 60 * 60 * 8; // 8 hours — one working day
 
 const passcode = () => process.env.ADMIN_PASSCODE || "";
+const adminEmail = () => (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
 
-export const authEnabled = () => passcode().length > 0;
+export const authEnabled = () => passcode().length > 0 && adminEmail().length > 0;
 
 const sign = (payload: string) =>
-  createHmac("sha256", `ll-admin:${passcode()}`).update(payload).digest("hex");
+  createHmac("sha256", `ll-admin:${adminEmail()}:${passcode()}`).update(payload).digest("hex");
 
 /** Constant-time compare that tolerates a length mismatch without leaking it. */
 function safeEqual(a: string, b: string) {
@@ -37,10 +44,15 @@ function safeEqual(a: string, b: string) {
   return timingSafeEqual(ab, bb);
 }
 
-export function checkPasscode(input: string) {
-  const expected = passcode();
-  if (!expected) return false;
-  return safeEqual(input, expected);
+/**
+ * Both halves are always compared, even when the email is already wrong, so
+ * the time taken does not tell an attacker which half they got right.
+ */
+export function checkCredentials(email: string, input: string) {
+  if (!authEnabled()) return false;
+  const emailOk = safeEqual(email.trim().toLowerCase(), adminEmail());
+  const passOk = safeEqual(input, passcode());
+  return emailOk && passOk;
 }
 
 function mintToken() {

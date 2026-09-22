@@ -16,7 +16,8 @@ export async function adminGate(): Promise<ReactNode | null> {
     return (
       <Notice title="Admin panel not configured">
         <p>
-          Set <code className="font-mono text-ink">ADMIN_PASSCODE</code> in the Vercel project
+          Set <code className="font-mono text-ink">ADMIN_EMAIL</code> and{" "}
+          <code className="font-mono text-ink">ADMIN_PASSCODE</code> in the Vercel project
           environment variables, then redeploy.
         </p>
         <p>Until it is set this page stays locked — it will not fall back to being public.</p>

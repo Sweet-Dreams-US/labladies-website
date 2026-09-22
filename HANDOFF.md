@@ -13,18 +13,26 @@ them may be prefixed `NEXT_PUBLIC_`.
 | `SUPABASE_URL` | `https://nxhwqtqroyerbbklywyn.supabase.co` | Shared FreeWebsites project |
 | `SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_cVzB-1BXi5iuK3PIjAHFrQ_Tk76Gvpn` | Reads nothing on its own |
 | `SUPABASE_ADMIN_TOKEN` | in `.env.local` | Unlocks only the `ll_` tables |
-| `ADMIN_PASSCODE` | in `.env.local` | What Michelle types to sign in |
+| `ADMIN_EMAIL` | `labladies2026@gmail.com` | The email half of the sign-in |
+| `ADMIN_PASSCODE` | in `.env.local` | The password half |
 | `ALERT_EMAIL_TO` | `labladies2026@gmail.com` | Where overdue alerts go |
 | `ALERT_FROM` | `Lab Ladies <alerts@labladies.net>` | Needs the domain verified in Resend |
 | `RESEND_API_KEY` | *(not set yet)* | **Until this is set, alerts log instead of sending** |
 | `CRON_SECRET` | generate a random string | Vercel signs the nightly cron with it |
 
 The live values for `SUPABASE_ADMIN_TOKEN` and `ADMIN_PASSCODE` are in
-`.env.local`, which is gitignored. Give Michelle the passcode directly — by
-text or on a call, not by email.
+`.env.local`, which is gitignored. Give Michelle the password directly — by
+text or on a call. Do not send it to `labladies2026@gmail.com`, since that
+address is now half of the credential.
 
-Rotating `ADMIN_PASSCODE` instantly signs everyone out, by design: the session
-cookie is signed with a secret derived from the passcode.
+Changing either `ADMIN_EMAIL` or `ADMIN_PASSCODE` instantly signs everyone
+out, by design: the session cookie is signed with a secret derived from both.
+
+There is one shared credential rather than per-person accounts. That is the
+right weight for a three-person office, and who performed a collection is
+recorded as data on the encounter rather than inferred from who was logged in.
+If the team grows to where "who changed this" matters, `src/lib/admin-auth.ts`
+is the file that grows a users table.
 
 ## 2. Turn the alert emails on
 

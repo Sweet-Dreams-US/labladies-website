@@ -4,9 +4,14 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+/** Tall, high-contrast fields — this gets typed on a phone, often in a car. */
+const fieldClass =
+  "mt-1.5 w-full rounded-lg border border-cream-deep bg-cream px-4 py-3 text-base text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/20";
+
 export default function LoginForm() {
   const router = useRouter();
-  const [passcode, setPasscode] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -19,7 +24,7 @@ export default function LoginForm() {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ passcode }),
+        body: JSON.stringify({ email, password }),
       });
 
       if (res.ok) {
@@ -29,8 +34,8 @@ export default function LoginForm() {
       }
 
       const data = await res.json().catch(() => ({}));
-      setError(data.error || "That passcode didn't work.");
-      setPasscode("");
+      setError(data.error || "That email and password didn't match.");
+      setPassword("");
     } catch {
       setError("Couldn't reach the server. Try again.");
     } finally {
@@ -55,21 +60,38 @@ export default function LoginForm() {
 
         <h1 className="mt-6 text-2xl font-extrabold tracking-tight text-ink">Tracking board</h1>
         <p className="mt-1 text-sm text-muted">
-          Collections, results follow-up and payments. Enter the passcode to continue.
+          Collections, results follow-up and payments. Sign in to continue.
         </p>
 
-        <label htmlFor="passcode" className="sr-only">
-          Admin passcode
+        <label htmlFor="email" className="mt-6 block text-sm font-semibold text-ink">
+          Email
         </label>
         <input
-          id="passcode"
-          type="password"
+          id="email"
+          type="email"
           autoFocus
+          autoComplete="username"
+          inputMode="email"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          className={fieldClass}
+        />
+
+        <label htmlFor="password" className="mt-4 block text-sm font-semibold text-ink">
+          Password
+        </label>
+        <input
+          id="password"
+          type="password"
           autoComplete="current-password"
-          value={passcode}
-          onChange={(e) => setPasscode(e.target.value)}
-          placeholder="Passcode"
-          className="mt-6 w-full rounded-lg border border-cream-deep bg-cream px-4 py-3 font-mono text-base text-ink outline-none focus:border-brand focus:ring-2 focus:ring-brand/20"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Password"
+          className={fieldClass}
         />
 
         {error && (
@@ -80,7 +102,7 @@ export default function LoginForm() {
 
         <button
           type="submit"
-          disabled={busy || !passcode}
+          disabled={busy || !email || !password}
           className="mt-5 min-h-12 w-full rounded-lg bg-brand px-4 text-base font-bold text-white transition-colors hover:bg-brand-deep disabled:opacity-40"
         >
           {busy ? "Checking…" : "Sign in"}
