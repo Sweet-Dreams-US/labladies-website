@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { computeAlerts, listEncounterRows } from "@/lib/tracking";
+import { computeAlerts, computeInquiryAlerts, listEncounterRows } from "@/lib/tracking";
+import { listInquiries } from "@/lib/inquiries";
 import { ALERT_DAYS } from "@/lib/tracking-types";
 import { adminGate } from "./gate";
 import { Empty, Panel, Pill, buttonClass, money, shortDate } from "./ui";
@@ -15,8 +16,15 @@ export default async function AdminHome() {
   const blocked = await adminGate();
   if (blocked) return blocked;
 
-  const { rows } = await listEncounterRows();
-  const alerts = computeAlerts(rows);
+  const [{ rows }, inquiries] = await Promise.all([listEncounterRows(), listInquiries()]);
+
+  // All four rules land in one list, newest pain first, so the page answers
+  // "what needs me" rather than "what kind of thing needs me".
+  const alerts = [...computeAlerts(rows), ...computeInquiryAlerts(inquiries)].sort(
+    (a, b) => b.daysOverdue - a.daysOverdue,
+  );
+
+  const newInquiries = inquiries.filter((i) => i.status === "new");
 
   const open = rows.filter((r) => r.status === "open");
   const awaitingResults = rows.filter(
@@ -47,7 +55,8 @@ export default async function AdminHome() {
         </Link>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <Stat label="New inquiries" value={newInquiries.length} href="/admin/inquiries" />
         <Stat label="Open collections" value={open.length} href="/admin/tracking" />
         <Stat label="Waiting on results" value={awaitingResults.length} href="/admin/tracking" />
         <Stat label="To send to the doctor" value={toForward.length} href="/admin/tracking" />
@@ -60,7 +69,7 @@ export default async function AdminHome() {
             ? `${alerts.length} ${alerts.length === 1 ? "thing needs" : "things need"} attention`
             : "Nothing overdue"
         }
-        description={`Flagged after ${ALERT_DAYS.results_overdue} days with no results, ${ALERT_DAYS.forward_overdue} days without forwarding them, or ${ALERT_DAYS.payment_overdue} days unpaid.`}
+        description={`Flagged after ${ALERT_DAYS.inquiry_uncontacted} day without calling an inquiry back, ${ALERT_DAYS.results_overdue} days with no results, ${ALERT_DAYS.forward_overdue} days without forwarding them, or ${ALERT_DAYS.payment_overdue} days unpaid.`}
       >
         {alerts.length === 0 ? (
           <Empty>Everything is on track. Nothing has been sitting too long.</Empty>
@@ -68,22 +77,31 @@ export default async function AdminHome() {
           <ul className="divide-y divide-cream-deep">
             {alerts.map((a) => (
               <li
-                key={`${a.rule}-${a.encounter.id}`}
+                key={`${a.rule}-${a.entityId}`}
                 className="flex flex-wrap items-start justify-between gap-3 px-5 py-4"
               >
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-bold text-ink">{a.encounter.patient_name}</span>
+                    <span className="font-bold text-ink">{a.subject}</span>
                     <Pill tone={a.rule === "payment_overdue" ? "warn" : "bad"}>{a.label}</Pill>
                   </div>
                   <p className="mt-1 text-sm text-muted">{a.detail}</p>
                   <p className="mt-0.5 text-xs text-muted">
-                    Service {shortDate(a.encounter.date_of_service)}
-                    {a.encounter.lab && ` · ${a.encounter.lab.name}`}
-                    {a.encounter.practice && ` · ${a.encounter.practice.name}`}
+                    {a.encounter ? (
+                      <>
+                        Service {shortDate(a.encounter.date_of_service)}
+                        {a.encounter.lab && ` · ${a.encounter.lab.name}`}
+                        {a.encounter.practice && ` · ${a.encounter.practice.name}`}
+                      </>
+                    ) : (
+                      <>Came in {shortDate(a.when)}</>
+                    )}
                   </p>
                 </div>
-                <Link href="/admin/tracking" className={buttonClass.secondary}>
+                <Link
+                  href={a.encounter ? "/admin/tracking" : "/admin/inquiries"}
+                  className={buttonClass.secondary}
+                >
                   Open
                 </Link>
               </li>

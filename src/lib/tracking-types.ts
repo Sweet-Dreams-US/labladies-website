@@ -162,7 +162,11 @@ export type EncounterRow = Encounter & {
   phlebotomist: Phlebotomist | null;
 };
 
-export type AlertRule = "results_overdue" | "forward_overdue" | "payment_overdue";
+export type AlertRule =
+  | "results_overdue"
+  | "forward_overdue"
+  | "payment_overdue"
+  | "inquiry_uncontacted";
 
 export type Alert = {
   rule: AlertRule;
@@ -170,7 +174,16 @@ export type Alert = {
   /** Why this row is showing up, in Michelle's words. */
   detail: string;
   daysOverdue: number;
-  encounter: EncounterRow;
+  /**
+   * The row this is about, flattened so callers never branch on the kind:
+   * `subject` is the name to show, `entityId` is what de-duplicates the
+   * emails, and `when` is the date it hinges on.
+   */
+  entityId: string;
+  subject: string;
+  when: string | null;
+  /** Only set for the three encounter rules; the inquiry rule has none. */
+  encounter?: EncounterRow;
 };
 
 /** How long each step may sit before the board flags it. */
@@ -178,4 +191,6 @@ export const ALERT_DAYS: Record<AlertRule, number> = {
   results_overdue: 7,
   forward_overdue: 2,
   payment_overdue: 30,
+  // Someone who fills in a form is usually ringing round several providers.
+  inquiry_uncontacted: 1,
 };

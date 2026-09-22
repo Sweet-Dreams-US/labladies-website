@@ -258,6 +258,9 @@ export function computeAlerts(rows: EncounterRow[]): Alert[] {
           label: "Results not back yet",
           detail: `Collected ${d} days ago and ${e.lab?.name ?? "the lab"} has not returned results.`,
           daysOverdue: d,
+          entityId: e.id,
+          subject: e.patient_name,
+          when: e.date_of_service,
           encounter: e,
         });
       }
@@ -273,6 +276,9 @@ export function computeAlerts(rows: EncounterRow[]): Alert[] {
             e.practice?.name ?? e.ordering_provider ?? "the ordering practitioner"
           }.`,
           daysOverdue: d,
+          entityId: e.id,
+          subject: e.patient_name,
+          when: e.results_received_on ?? e.date_of_service,
           encounter: e,
         });
       }
@@ -288,6 +294,9 @@ export function computeAlerts(rows: EncounterRow[]): Alert[] {
           label: "Payment outstanding",
           detail: `$${(owed - got).toFixed(2)} still owed, ${d} days after the visit.`,
           daysOverdue: d,
+          entityId: e.id,
+          subject: e.patient_name,
+          when: e.date_of_service,
           encounter: e,
         });
       }
@@ -297,23 +306,74 @@ export function computeAlerts(rows: EncounterRow[]): Alert[] {
   return out.sort((a, b) => b.daysOverdue - a.daysOverdue);
 }
 
+/**
+ * A website inquiry nobody has replied to.
+ *
+ * Separate from computeAlerts because inquiries are a different table, but it
+ * produces the same Alert shape so the dashboard and the nightly email treat
+ * all four rules identically.
+ */
+export function computeInquiryAlerts(
+  inquiries: { id: string; name: string; status: string; created_at: string }[],
+): Alert[] {
+  const out: Alert[] = [];
+
+  for (const i of inquiries) {
+    if (i.status !== "new") continue;
+
+    const hours = (Date.now() - Date.parse(i.created_at)) / (1000 * 60 * 60);
+    if (!Number.isFinite(hours) || hours < ALERT_DAYS.inquiry_uncontacted * 24) continue;
+
+    const days = Math.floor(hours / 24);
+    out.push({
+      rule: "inquiry_uncontacted",
+      label: "Nobody has called them back",
+      detail:
+        days >= 1
+          ? `Asked for a callback ${days} ${days === 1 ? "day" : "days"} ago and is still marked New.`
+          : "Asked for a callback yesterday and is still marked New.",
+      daysOverdue: days,
+      entityId: i.id,
+      subject: i.name,
+      when: i.created_at.slice(0, 10),
+    });
+  }
+
+  return out.sort((a, b) => b.daysOverdue - a.daysOverdue);
+}
+
 /* ------------------------------------------------- alert-email de-duplication */
 
 export const listSentAlerts = () =>
-  list<{ encounter_id: string; rule: string }>("ll_alerts_sent?select=encounter_id,rule");
+  list<{ entity_id: string; rule: string }>("ll_alerts_sent?select=entity_id,rule");
 
-export const recordAlertSent = (encounterId: string, rule: AlertRule) =>
-  insert("ll_alerts_sent", { encounter_id: encounterId, rule });
+export const recordAlertSent = (entityId: string, rule: AlertRule) =>
+  insert("ll_alerts_sent", { entity_id: entityId, rule });
 
 /**
  * Clear the "already nagged" marks for an encounter, so that if a step slips
  * again later it can alert again rather than staying permanently silent.
  */
-export async function clearAlertMarks(encounterId: string, rules: AlertRule[]) {
+export async function clearAlertMarks(entityId: string, rules: AlertRule[]) {
   if (!trackingEnabled() || !rules.length) return;
   const inList = rules.map((r) => `"${r}"`).join(",");
   await rest(
-    `ll_alerts_sent?encounter_id=eq.${encodeURIComponent(encounterId)}&rule=in.(${inList})`,
+    `ll_alerts_sent?entity_id=eq.${encodeURIComponent(entityId)}&rule=in.(${inList})`,
     { method: "DELETE", headers: { Prefer: "return=minimal" } },
   ).catch((err) => console.error("[ll:clear-alerts-exception]", err));
+}
+
+/**
+ * Drop every alert mark for one subject.
+ *
+ * Nothing cascades from ll_alerts_sent any more, so a deleted encounter or
+ * inquiry has to take its marks with it — otherwise a later row reusing
+ * nothing at all still leaves rows nobody can explain.
+ */
+export async function clearAllAlertMarks(entityId: string) {
+  if (!trackingEnabled()) return;
+  await rest(`ll_alerts_sent?entity_id=eq.${encodeURIComponent(entityId)}`, {
+    method: "DELETE",
+    headers: { Prefer: "return=minimal" },
+  }).catch((err) => console.error("[ll:clear-all-alerts-exception]", err));
 }

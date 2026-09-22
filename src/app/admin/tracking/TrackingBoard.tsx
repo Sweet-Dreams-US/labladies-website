@@ -6,12 +6,15 @@ import {
   PAYMENT_METHOD_LABEL,
   SEND_METHOD_LABEL,
   STATUS_LABEL,
+  type EncounterStatus,
   type Encounter,
   type EncounterRow,
+  type PaymentMethod,
   type Reference,
 } from "@/lib/tracking-types";
 import { Empty, Panel, Pill, YesNo, buttonClass, inputClass, money, shortDate } from "../ui";
 import EncounterForm from "./EncounterForm";
+import { InlineDate, InlineSelect, InlineText } from "./InlineFields";
 
 /**
  * The board that replaces the Google Doc.
@@ -45,6 +48,30 @@ export default function TrackingBoard({ rows, reference }: Props) {
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState<Encounter | null>(null);
   const [pending, setPending] = useState<string | null>(null);
+
+  // Built once rather than per row: this renders inside every cell of a few
+  // hundred rows.
+  const practiceOptions = useMemo(
+    () => reference.practices.map((p) => ({ value: p.id, label: p.name })),
+    [reference.practices],
+  );
+  const labOptions = useMemo(
+    () =>
+      reference.labs.map((l) => ({
+        value: l.id,
+        label: l.is_reference_lab ? `${l.name} (ref)` : l.name,
+      })),
+    [reference.labs],
+  );
+  const phlebOptions = useMemo(
+    () => reference.phlebotomists.map((p) => ({ value: p.id, label: p.initials })),
+    [reference.phlebotomists],
+  );
+  const statusOptions = Object.entries(STATUS_LABEL).map(([value, label]) => ({ value, label }));
+  const paymentOptions = Object.entries(PAYMENT_METHOD_LABEL).map(([value, label]) => ({
+    value,
+    label,
+  }));
 
   const filtered = useMemo(() => {
     const needle = q.trim().toLowerCase();
@@ -83,6 +110,28 @@ export default function TrackingBoard({ rows, reference }: Props) {
       return true;
     });
   }, [rows, tab, q, practice, lab]);
+
+  /**
+   * Save one field and refresh.
+   *
+   * Returns whether it worked so an inline field can put its old value back
+   * on failure rather than showing something that isn't in the database.
+   * Unlike `toggle` it does not grey the row — the field shows its own state,
+   * and dimming the whole row on every keystroke-commit would flicker.
+   */
+  async function saveField(id: string, patch: Partial<Encounter>): Promise<boolean> {
+    try {
+      const res = await fetch(`/api/admin/encounters/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      if (res.ok) router.refresh();
+      return res.ok;
+    } catch {
+      return false;
+    }
+  }
 
   /** Optimistic-free: flip the flag server-side, then let the page re-fetch. */
   async function toggle(row: EncounterRow, patch: Partial<Encounter>) {
@@ -220,11 +269,15 @@ export default function TrackingBoard({ rows, reference }: Props) {
         ) : (
           <>
             {/* Desktop: the sheet, in her column order. */}
+            <p className="hidden px-5 pb-2 text-xs text-muted xl:block">
+              Every cell is editable — click a date, a dropdown or a note and it saves itself.
+              Scroll sideways for payment and notes; the patient name stays put.
+            </p>
             <div className="hidden overflow-x-auto xl:block">
-              <table className="w-full min-w-[1200px] text-sm">
+              <table className="w-full min-w-[1500px] text-sm">
                 <thead>
                   <tr className="border-b border-cream-deep text-left text-xs tracking-wide text-muted uppercase">
-                    <Th>Patient</Th>
+                    <Th sticky>Patient</Th>
                     <Th>DOB</Th>
                     <Th>Service</Th>
                     <Th>Ordering practitioner</Th>
@@ -252,31 +305,70 @@ export default function TrackingBoard({ rows, reference }: Props) {
                           busy ? "opacity-50" : ""
                         }`}
                       >
-                        <Td>
-                          <span className="font-semibold text-ink">{r.patient_name}</span>
-                          {r.status !== "open" && (
-                            <span className="mt-1 block">
-                              <Pill tone={r.status === "complete" ? "good" : "neutral"}>
-                                {STATUS_LABEL[r.status]}
-                              </Pill>
+                        <Td sticky className="min-w-[9.5rem]">
+                          <InlineText
+                            value={r.patient_name}
+                            className="font-semibold"
+                            onSave={(v) =>
+                              // Never let the name be cleared — it is the one
+                              // thing that makes a row findable.
+                              v ? saveField(r.id, { patient_name: v }) : Promise.resolve(false)
+                            }
+                          />
+                          <span className="mt-1 block">
+                            <InlineSelect
+                              value={r.status}
+                              options={statusOptions}
+                              allowEmpty={false}
+                              className="text-xs"
+                              onSave={(v) =>
+                                saveField(r.id, {
+                                  status: (v ?? "open") as EncounterStatus,
+                                })
+                              }
+                            />
+                          </span>
+                        </Td>
+                        <Td className="min-w-[7.75rem]">
+                          <InlineDate
+                            value={r.patient_dob}
+                            onSave={(v) => saveField(r.id, { patient_dob: v })}
+                          />
+                        </Td>
+                        <Td className="min-w-[7.75rem]">
+                          <InlineDate
+                            value={r.date_of_service}
+                            onSave={(v) => saveField(r.id, { date_of_service: v })}
+                          />
+                        </Td>
+                        <Td className="min-w-[9.5rem]">
+                          <InlineSelect
+                            value={r.practice_id}
+                            options={practiceOptions}
+                            onSave={(v) => saveField(r.id, { practice_id: v })}
+                          />
+                          {!r.practice_id && r.ordering_provider && (
+                            <span className="block px-1.5 text-xs text-muted">
+                              {r.ordering_provider}
                             </span>
                           )}
                         </Td>
-                        <Td>{shortDate(r.patient_dob)}</Td>
-                        <Td>{shortDate(r.date_of_service)}</Td>
-                        <Td>{r.practice?.name ?? r.ordering_provider ?? "—"}</Td>
-                        <Td>
+                        <Td className="max-w-[9rem]">
                           {r.test_types.length ? (
                             <span className="text-muted">{r.test_types.join(", ")}</span>
                           ) : (
-                            "—"
+                            <span className="text-muted/60">—</span>
                           )}
                         </Td>
-                        <Td>
-                          {r.lab?.name ?? "—"}
+                        <Td className="min-w-[8.5rem]">
+                          <InlineSelect
+                            value={r.lab_id}
+                            options={labOptions}
+                            onSave={(v) => saveField(r.id, { lab_id: v })}
+                          />
                           {r.lab && !tracks && (
                             <span
-                              className="block text-xs text-muted"
+                              className="block px-1.5 text-xs text-muted"
                               title="Ordering provider's own account — no access after drop-off"
                             >
                               their account
@@ -342,12 +434,56 @@ export default function TrackingBoard({ rows, reference }: Props) {
                             onClick={() => toggle(r, { rl_insurance_paid: !r.rl_insurance_paid })}
                           />
                         </TdC>
-                        <Td>
-                          <PaymentCell row={r} />
+                        <Td className="min-w-[10rem]">
+                          <span className="flex gap-1">
+                            <InlineText
+                              value={r.amount_paid}
+                              numeric
+                              prefix="$"
+                              placeholder="paid"
+                              onSave={(v) =>
+                                saveField(r.id, { amount_paid: v === null ? null : Number(v) })
+                              }
+                            />
+                            <span className="self-center text-xs text-muted">of</span>
+                            <InlineText
+                              value={r.amount_due}
+                              numeric
+                              prefix="$"
+                              placeholder="due"
+                              onSave={(v) =>
+                                saveField(r.id, { amount_due: v === null ? null : Number(v) })
+                              }
+                            />
+                          </span>
+                          <InlineSelect
+                            value={r.payment_method}
+                            options={paymentOptions}
+                            allowEmpty={false}
+                            className="text-xs"
+                            onSave={(v) =>
+                              saveField(r.id, {
+                                payment_method: (v ?? "none") as PaymentMethod,
+                              })
+                            }
+                          />
+                          <OwedPill row={r} />
                         </Td>
-                        <Td>{r.phlebotomist?.initials ?? "—"}</Td>
-                        <Td className="max-w-[16rem]">
-                          <span className="text-muted">{r.notes || "—"}</span>
+                        <Td className="min-w-[5.5rem]">
+                          <InlineSelect
+                            value={r.phlebotomist_id}
+                            options={phlebOptions}
+                            onSave={(v) => saveField(r.id, { phlebotomist_id: v })}
+                          />
+                        </Td>
+                        <Td className="min-w-[12rem]">
+                          <InlineText
+                            value={r.notes}
+                            multiline
+                            placeholder="Add a note…"
+                            className="text-muted"
+                            onSave={(v) => saveField(r.id, { notes: v })}
+                          />
                         </Td>
                         <Td>
                           <div className="flex gap-1">
@@ -382,24 +518,67 @@ export default function TrackingBoard({ rows, reference }: Props) {
                 return (
                   <li key={r.id} className={`p-5 ${busy ? "opacity-50" : ""}`}>
                     <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div>
-                        <p className="text-base font-bold text-ink">{r.patient_name}</p>
-                        <p className="text-sm text-muted">
-                          DOB {shortDate(r.patient_dob)} · Service {shortDate(r.date_of_service)}
-                        </p>
-                      </div>
-                      {r.status !== "open" && (
-                        <Pill tone={r.status === "complete" ? "good" : "neutral"}>
-                          {STATUS_LABEL[r.status]}
-                        </Pill>
-                      )}
+                      <p className="text-base font-bold text-ink">{r.patient_name}</p>
+                      <Pill tone={r.status === "complete" ? "good" : "neutral"}>
+                        {STATUS_LABEL[r.status]}
+                      </Pill>
                     </div>
 
-                    <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                      <Kv k="Practitioner" v={r.practice?.name ?? r.ordering_provider ?? "—"} />
-                      <Kv k="Lab" v={r.lab?.name ?? "—"} />
-                      <Kv k="Collected" v={r.test_types.join(", ") || "—"} />
-                      <Kv k="By" v={r.phlebotomist?.initials ?? "—"} />
+                    {/*
+                      The same edit-in-place fields as the desktop table. She
+                      does most of this on a phone between visits, so "fix the
+                      date without opening anything" has to work here too.
+                    */}
+                    <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-3 text-sm">
+                      <Ke k="Date of birth">
+                        <InlineDate
+                          value={r.patient_dob}
+                          onSave={(v) => saveField(r.id, { patient_dob: v })}
+                        />
+                      </Ke>
+                      <Ke k="Date of service">
+                        <InlineDate
+                          value={r.date_of_service}
+                          onSave={(v) => saveField(r.id, { date_of_service: v })}
+                        />
+                      </Ke>
+                      <Ke k="Practitioner">
+                        <InlineSelect
+                          value={r.practice_id}
+                          options={practiceOptions}
+                          onSave={(v) => saveField(r.id, { practice_id: v })}
+                        />
+                      </Ke>
+                      <Ke k="Lab">
+                        <InlineSelect
+                          value={r.lab_id}
+                          options={labOptions}
+                          onSave={(v) => saveField(r.id, { lab_id: v })}
+                        />
+                      </Ke>
+                      <Ke k="Who collected">
+                        <InlineSelect
+                          value={r.phlebotomist_id}
+                          options={phlebOptions}
+                          onSave={(v) => saveField(r.id, { phlebotomist_id: v })}
+                        />
+                      </Ke>
+                      <Ke k="Status">
+                        <InlineSelect
+                          value={r.status}
+                          options={statusOptions}
+                          allowEmpty={false}
+                          onSave={(v) =>
+                            saveField(r.id, { status: (v ?? "open") as EncounterStatus })
+                          }
+                        />
+                      </Ke>
+                      <div className="col-span-2">
+                        <dt className="text-xs tracking-wide text-muted uppercase">Collected</dt>
+                        <dd className="font-semibold text-ink">
+                          {r.test_types.join(", ") || "—"}
+                        </dd>
+                      </div>
                     </dl>
 
                     <div className="mt-3 flex flex-wrap gap-2">
@@ -459,15 +638,58 @@ export default function TrackingBoard({ rows, reference }: Props) {
                       />
                     </div>
 
-                    {(Number(r.amount_due ?? 0) > 0 ||
-                      Number(r.amount_paid ?? 0) > 0 ||
-                      r.payment_method !== "none") && (
-                      <div className="mt-3 text-sm">
-                        <PaymentCell row={r} />
+                    <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-3 text-sm">
+                      <Ke k="Paid">
+                        <InlineText
+                          value={r.amount_paid}
+                          numeric
+                          prefix="$"
+                          placeholder="—"
+                          onSave={(v) =>
+                            saveField(r.id, { amount_paid: v === null ? null : Number(v) })
+                          }
+                        />
+                      </Ke>
+                      <Ke k="Due">
+                        <InlineText
+                          value={r.amount_due}
+                          numeric
+                          prefix="$"
+                          placeholder="—"
+                          onSave={(v) =>
+                            saveField(r.id, { amount_due: v === null ? null : Number(v) })
+                          }
+                        />
+                      </Ke>
+                      <div className="col-span-2">
+                        <dt className="text-xs tracking-wide text-muted uppercase">
+                          How they paid
+                        </dt>
+                        <dd>
+                          <InlineSelect
+                            value={r.payment_method}
+                            options={paymentOptions}
+                            allowEmpty={false}
+                            onSave={(v) =>
+                              saveField(r.id, {
+                                payment_method: (v ?? "none") as PaymentMethod,
+                              })
+                            }
+                          />
+                        </dd>
                       </div>
-                    )}
+                    </div>
+                    <OwedPill row={r} />
 
-                    {r.notes && <p className="mt-3 text-sm text-muted">{r.notes}</p>}
+                    <div className="mt-3">
+                      <InlineText
+                        value={r.notes}
+                        multiline
+                        placeholder="Add a note…"
+                        className="text-muted"
+                        onSave={(v) => saveField(r.id, { notes: v })}
+                      />
+                    </div>
 
                     <div className="mt-4 flex gap-2">
                       <button
@@ -475,7 +697,7 @@ export default function TrackingBoard({ rows, reference }: Props) {
                         onClick={() => setEditing(r)}
                         className={buttonClass.secondary}
                       >
-                        Edit
+                        Full form
                       </button>
                       <button type="button" onClick={() => remove(r)} className={buttonClass.quiet}>
                         Delete
@@ -498,34 +720,54 @@ function Th({
   children,
   center,
   title,
+  sticky = false,
 }: {
   children: React.ReactNode;
   center?: boolean;
   title?: string;
+  sticky?: boolean;
 }) {
   return (
     <th
       scope="col"
       title={title}
-      className={`px-3 py-3 font-bold ${center ? "text-center" : ""}`}
+      className={`px-3 py-3 font-bold ${center ? "text-center" : ""} ${
+        sticky ? "sticky left-0 z-10 bg-white shadow-[1px_0_0_0_var(--color-cream-deep)]" : ""
+      }`}
     >
       {children}
     </th>
   );
 }
 
-const Td = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <td className={`px-3 py-3 ${className}`}>{children}</td>
+const Td = ({
+  children,
+  className = "",
+  sticky = false,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  /** Pins the cell while the table scrolls sideways. Patient column only. */
+  sticky?: boolean;
+}) => (
+  <td
+    className={`px-3 py-3 ${
+      sticky ? "sticky left-0 z-10 bg-white shadow-[1px_0_0_0_var(--color-cream-deep)]" : ""
+    } ${className}`}
+  >
+    {children}
+  </td>
 );
 
 const TdC = ({ children }: { children: React.ReactNode }) => (
   <td className="px-3 py-3 text-center">{children}</td>
 );
 
-const Kv = ({ k, v }: { k: string; v: string }) => (
+/** A labelled slot on the phone card holding an edit-in-place field. */
+const Ke = ({ k, children }: { k: string; children: React.ReactNode }) => (
   <div>
     <dt className="text-xs tracking-wide text-muted uppercase">{k}</dt>
-    <dd className="font-semibold text-ink">{v}</dd>
+    <dd className="mt-0.5">{children}</dd>
   </div>
 );
 
@@ -585,33 +827,17 @@ function TapFlag({
   );
 }
 
-function PaymentCell({ row }: { row: EncounterRow }) {
+/** Just the outstanding-balance badge, for the desktop row. */
+function OwedPill({ row }: { row: EncounterRow }) {
   const due = Number(row.amount_due ?? 0);
   const paid = Number(row.amount_paid ?? 0);
-
-  if (!due && !paid && row.payment_method === "none") {
-    return <span className="text-muted">—</span>;
-  }
-
-  const outstanding = due > 0 && paid < due;
-
+  if (due <= 0) return null;
   return (
-    <span className="space-y-1">
-      <span className="block font-semibold text-ink">
-        {money(row.amount_paid)}
-        {due > 0 && <span className="font-normal text-muted"> of {money(row.amount_due)}</span>}
-      </span>
-      <span className="block">
-        {outstanding ? (
-          <Pill tone="warn">{money(due - paid)} owed</Pill>
-        ) : due > 0 ? (
-          <Pill tone="good">Paid</Pill>
-        ) : null}
-      </span>
-      {row.payment_method !== "none" && (
-        <span className="block text-xs text-muted">
-          {PAYMENT_METHOD_LABEL[row.payment_method]}
-        </span>
+    <span className="mt-1 block px-1.5">
+      {paid < due ? (
+        <Pill tone="warn">{money(due - paid)} owed</Pill>
+      ) : (
+        <Pill tone="good">Paid</Pill>
       )}
     </span>
   );

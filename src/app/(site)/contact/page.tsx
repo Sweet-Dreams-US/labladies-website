@@ -11,6 +11,7 @@ import {
   Section,
   TextButton,
 } from "@/components/ui";
+import { InquiryForm } from "@/components/InquiryForm";
 import { appointmentWindows, site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -40,7 +41,29 @@ export default function ContactPage() {
         </div>
       </section>
 
+      {/*
+        The form sits below the phone number, never above it. Calling is still
+        the fastest way to book and the site is built around that; this is for
+        the people who won't ring — facility staff mid-shift, families in
+        another timezone, anyone reading this at eleven at night.
+      */}
       <Section>
+        <div className="mx-auto max-w-3xl">
+          <div className="text-center">
+            <Eyebrow>Or leave us a message</Eyebrow>
+            <Heading>Request a callback</Heading>
+            <Lead className="mx-auto mt-4">
+              Tell us how to reach you and we will get back to you. No medical details needed —
+              we will go through everything on the phone.
+            </Lead>
+          </div>
+          <div className="mt-10">
+            <InquiryForm />
+          </div>
+        </div>
+      </Section>
+
+      <Section className="pt-0">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Card>
             <PhoneIcon className="h-10 w-10 text-brand" />

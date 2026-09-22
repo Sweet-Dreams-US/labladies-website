@@ -121,6 +121,47 @@ house pattern. 8-hour session rather than the usual 12, because this board
 carries patient names and gets used on a phone. Who drew the blood is recorded
 as data on the encounter, not inferred from the login.
 
+**Edit in place.** Michelle came from a spreadsheet, where changing a cell
+means clicking it and typing. Making her open a form to fix one date was the
+clearest way this could have felt worse than the Google Doc it replaced, so
+almost every cell is editable in the row — on the desktop table and on the
+phone cards. `InlineFields.tsx` holds the pieces; the rules are: dropdowns and
+dates save on change, text and numbers save on blur or Enter (never per
+keystroke), Escape reverts, and a failed save puts the old value back rather
+than leaving something on screen that isn't in the database. The full form is
+still there for the fields that don't belong in a row — test types, the
+results dates, the sticks flags in one place. `allowEmpty={false}` on an
+InlineSelect is for columns the database always has a value for; without it
+you get a duplicate option that means the same as one already in the list.
+
+The patient column is `sticky` — scrolling right to reach Notes must not cost
+you the name of the person the row is about.
+
+# Inquiries (`/admin/inquiries`)
+
+The site was built phone-call-first and had no form at all. `ll_inquiries`
+plus `InquiryForm` adds the second path, for people who won't ring. The phone
+number stays the primary CTA everywhere; the form sits *below* it on
+`/contact`, never above.
+
+- `ll_inquiries` is the one `ll_` table with a public write policy, because
+  the form posts with the bare publishable key. The `with check` pins what a
+  stranger may set, so a submission cannot arrive pre-marked "booked" or
+  carrying admin notes. Reading anything back still needs the admin token.
+- Same scope rule: no DOB field, no clinical field. `message` is free text a
+  stranger types, so the form asks them not to put medical details in it and
+  the admin repeats that. Do not add fields that invite more.
+- There is a honeypot (`company`). A filled one returns 200 and stores
+  nothing, so a bot learns nothing from the response.
+- The API stores first, then emails. A mail outage still leaves the lead in
+  /admin; a database outage still sends the email.
+- Marking anything past "new" stamps `contacted_at` automatically and clears
+  the alert mark. She should not have to tell the system what time it is.
+
+**`ll_alerts_sent.entity_id`** is deliberately not a foreign key: it points at
+either `ll_encounters` or `ll_inquiries` depending on the rule. Nothing
+cascades, so deletes call `clearAllAlertMarks` explicitly.
+
 **Route groups:** public pages live in `src/app/(site)/` with the header /
 footer / call-bar chrome; `/admin` sits outside it so the tracking board
 doesn't render a "Call Now" bar over itself.

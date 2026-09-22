@@ -96,6 +96,14 @@ it exists, replace the placeholder `site.googleReviewUrl` in
   because she has no access after drop-off. That is deliberate.
 - **The system stores no test results** — only whether they came back and
   whether they were sent on. Worth saying out loud, given what she raised.
+- **Almost every cell on the tracking board is editable where it sits.** Click
+  a date, a dropdown or a note and it saves itself — a green outline means
+  saved, red means it didn't. No need to open Edit unless she wants the full
+  form. "Full form" is still there for test types and the results dates.
+- **Inquiries** is new: the website now has a "request a callback" form, and
+  anything submitted lands there. Tap to call them, then tap Contacted — the
+  time is filled in automatically. Anything left on New for a day shows up in
+  the overdue list and the nightly email.
 
 ## 6. Open items
 

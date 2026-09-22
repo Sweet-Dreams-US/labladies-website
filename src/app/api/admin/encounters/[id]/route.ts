@@ -3,6 +3,7 @@ import { UUID, bad, pick, readJson, requireAdmin } from "@/lib/admin-route";
 import { ENCOUNTER_FIELDS } from "@/lib/encounter-fields";
 import {
   clearAlertMarks,
+  clearAllAlertMarks,
   deleteEncounter,
   logActivity,
   updateEncounter,
@@ -58,6 +59,8 @@ export async function DELETE(_req: Request, { params }: Ctx) {
 
   const ok = await deleteEncounter(id);
   if (!ok) return bad("Couldn't delete that.", 502);
+
+  await clearAllAlertMarks(id);
 
   await logActivity("encounter", id, "delete", "Deleted a collection record.");
   return NextResponse.json({ ok: true });
