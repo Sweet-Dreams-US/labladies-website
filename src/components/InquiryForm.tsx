@@ -1,7 +1,8 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { Turnstile, type TurnstileHandle } from "@/components/Turnstile";
 import { site } from "@/lib/site";
 import {
   INQUIRY_FOR_OPTIONS,
@@ -44,6 +45,7 @@ export function InquiryForm() {
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const turnstile = useRef<TurnstileHandle>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -55,6 +57,10 @@ export function InquiryForm() {
 
     setBusy(true);
     setError(null);
+
+    // Waits a moment if the bot check is still running, so a quick click on
+    // the button doesn't fail. Null when Turnstile isn't configured at all.
+    const turnstileToken = await turnstile.current?.getToken();
 
     try {
       const res = await fetch("/api/inquiry", {
@@ -71,17 +77,21 @@ export function InquiryForm() {
           message,
           company,
           source_path: pathname,
+          turnstile_token: turnstileToken,
         }),
       });
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
         setError(data.error || "Something went wrong. Please call us instead.");
+        // A token is single-use: a retry needs a fresh one.
+        turnstile.current?.reset();
         return;
       }
       setSent(true);
     } catch {
       setError("Couldn't reach the server. Please call us instead.");
+      turnstile.current?.reset();
     } finally {
       setBusy(false);
     }
@@ -249,6 +259,8 @@ export function InquiryForm() {
           onChange={(e) => setCompany(e.target.value)}
         />
       </div>
+
+      <Turnstile ref={turnstile} action="inquiry" className="mt-6" />
 
       {error && (
         <p role="alert" className="mt-5 font-semibold text-brand-ink">

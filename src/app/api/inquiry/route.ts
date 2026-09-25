@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { escapeHtml, sendMail, shell } from "@/lib/mail";
+import { button, escapeHtml, sendMail, shell } from "@/lib/mail";
 import { markInquiryEmail, saveInquiry } from "@/lib/inquiries";
 import { site } from "@/lib/site";
+import { clientIp, verifyTurnstile } from "@/lib/turnstile";
 
 /**
  * Public endpoint for the callback form.
@@ -40,6 +41,19 @@ export async function POST(req: Request) {
     );
   }
 
+  // After the cheap checks, before anything is stored or emailed.
+  const bot = await verifyTurnstile(body.turnstile_token, "inquiry", clientIp(req));
+  if (!bot.ok) {
+    console.warn("[ll-inquiry:turnstile-rejected]", bot.reason);
+    return NextResponse.json(
+      {
+        error:
+          "We couldn't confirm the form was sent by a person. Please try again — or just call us.",
+      },
+      { status: 400 },
+    );
+  }
+
   const inquiry = {
     name,
     phone,
@@ -68,6 +82,8 @@ export async function POST(req: Request) {
   const result = await sendMail({
     to: process.env.ALERT_EMAIL_TO || site.email,
     subject: `New website inquiry — ${inquiry.name}`,
+    // "Reply" answers the person, not the website's own mailbox.
+    replyTo: inquiry.email,
     logAs: "ll-inquiry",
     html: shell({
       heading: `${inquiry.name} asked for a callback`,
@@ -91,7 +107,13 @@ export async function POST(req: Request) {
                  ${escapeHtml(inquiry.message)}
                </p>`
             : ""
-        }`,
+        }
+        ${inquiry.phone ? button(`tel:${inquiry.phone.replace(/[^\d+]/g, "")}`, `Call ${inquiry.name.split(" ")[0]}`) : ""}
+        <p style="margin:14px 0 0;font-size:13px;color:#5b5450">
+          ${inquiry.email ? "Hit reply to email them directly. " : ""}Mark it contacted in the
+          <a href="${site.url}/admin/inquiries" style="color:#8e0906;font-weight:700">admin</a>
+          so it stops showing as new.
+        </p>`,
     }),
   });
 

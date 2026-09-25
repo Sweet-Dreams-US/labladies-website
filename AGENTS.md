@@ -169,6 +169,21 @@ number stays the primary CTA everywhere; the form sits *below* it on
 - Marking anything past "new" stamps `contacted_at` automatically and clears
   the alert mark. She should not have to tell the system what time it is.
 
+**Email** goes through Resend (`src/lib/mail.ts`) as
+`notifications@labladies.net`. `RESEND_API_KEY` is scoped to labladies.net
+**on purpose** — the Resend account holds every Sweet Dreams client's domain,
+and an account-wide key here would let a leak send as all of them. Never swap
+one in. Local dev sends to `delivered@resend.dev`, never to Michelle.
+
+**Turnstile** (`src/lib/turnstile.ts`, `src/components/Turnstile.tsx`) guards
+every form: the callback form and the admin sign-in. It enforces only when
+both `NEXT_PUBLIC_TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` are set.
+Refuses bad tokens; fails *open* when Cloudflare is unreachable or the secret
+is wrong, and logs it. Tokens are single-use — a form must call `reset()`
+after every failed attempt. Any new form gets the widget and a
+`verifyTurnstile()` call with its own `action`. Local dev uses Cloudflare's
+test keys (`1x…AA` always passes, `2x…AA` always fails).
+
 **`ll_alerts_sent.entity_id`** is deliberately not a foreign key: it points at
 either `ll_encounters` or `ll_inquiries` depending on the rule. Nothing
 cascades, so deletes call `clearAllAlertMarks` explicitly.
@@ -232,6 +247,7 @@ no SEO library.
 
 - **labladies.com** → switch to it once the lease allows DNS changes. See `HANDOFF.md` §3.
 - **Search Console / Bing Webmaster** — for labladies.net, now.
+- **Turnstile keys** — built and tested; waiting on the site + secret key.
 - **Google Business Profile** does not exist yet; `site.googleReviewUrl` is
   still a search-URL placeholder.
 - **Pricing** rows are all `null` ("Call for pricing") pending Michelle's rates.

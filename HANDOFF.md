@@ -29,9 +29,11 @@ be prefixed `NEXT_PUBLIC_`.
 | `ADMIN_EMAIL` | `labladies2026@gmail.com` | The email half of the sign-in |
 | `ADMIN_PASSCODE` | in `.env.local` | The password half |
 | `ALERT_EMAIL_TO` | `labladies2026@gmail.com` | Where overdue alerts go |
-| `ALERT_FROM` | `Lab Ladies <onboarding@resend.dev>` | Switch to `alerts@labladies.net` once verified in Resend |
-| `RESEND_API_KEY` | **still not set** | **Until this is set, alerts log instead of sending** |
+| `ALERT_FROM` | `Lab Ladies <notifications@labladies.net>` | labladies.net is verified in Resend |
+| `RESEND_API_KEY` | set 25 Sep 2026 | **Sending-only key, scoped to labladies.net.** It cannot send as any other client's domain — never swap in an account-wide key |
 | `CRON_SECRET` | set | Vercel signs the nightly cron with it |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | **waiting on Cole** | Cloudflare Turnstile — see §2b |
+| `TURNSTILE_SECRET_KEY` | **waiting on Cole** | Cloudflare Turnstile — see §2b |
 
 The live values for `SUPABASE_ADMIN_TOKEN` and `ADMIN_PASSCODE` are in
 `.env.local`, which is gitignored. Give Michelle the password directly — by
@@ -47,31 +49,50 @@ recorded as data on the encounter rather than inferred from who was logged in.
 If the team grows to where "who changed this" matters, `src/lib/admin-auth.ts`
 is the file that grows a users table.
 
-## 2. Turn the alert emails on — OUTSTANDING
+## 2. Email notifications — ON (25 Sep 2026)
 
-The cron is deployed and running weekdays at 12:00 UTC (8am ET), but with no
-`RESEND_API_KEY` it logs what it would have sent instead of sending. It also
-does not mark those alerts as sent, so nothing is lost — the moment the key is
-added, the backlog goes out on the next run.
+Resend is live. `labladies.net` is verified (its records sit on the `send`,
+`rsend` and `resend._domainkey` subdomains, clear of the Microsoft 365 email
+on the root), and mail goes out as `Lab Ladies <notifications@labladies.net>`
+to `labladies2026@gmail.com`:
 
-1. Add the Resend API key as `RESEND_API_KEY`.
-2. Verify `labladies.net` in Resend (add its records alongside the Microsoft
-   365 ones — don't replace them), then change `ALERT_FROM` to
-   `Lab Ladies <alerts@labladies.net>` — it is currently the
-   `onboarding@resend.dev` fallback.
-3. Redeploy.
+- **Every callback-form submission**, the moment it arrives. Reply goes to the
+  person who filled it in; there's a one-tap Call button and a link to the admin.
+- **The overdue digest**, weekdays 8am ET — only when something is actually
+  overdue, and each item only once.
 
-To test it by hand, sign into `/admin` and visit `/api/cron/alerts` — it
-returns JSON saying how many alerts fired and whether the mail sent.
+`RESEND_API_KEY` is a **sending-only key scoped to labladies.net**, created for
+this project. The account-wide key Cole pasted can see and send for every
+client domain; it was not put in this project, and since it has been shared in
+chat it should be rotated in Resend.
 
-Current thresholds (`ALERT_DAYS` in `src/lib/tracking-types.ts`):
+Testing locally never emails Michelle: `.env.local` sends to
+`delivered@resend.dev`, Resend's sandbox inbox.
 
-- **7 days** — collected, at a reference lab, results still not back.
-- **2 days** — results are in but have not gone to the ordering practitioner.
-- **30 days** — money still owed.
+## 2b. Bot protection (Cloudflare Turnstile) — waiting on the keys
 
-Michelle asked for "over a week" on the call, which is the first one. Adjust
-the other two once she has used it for a fortnight and has an opinion.
+Built and tested on both forms — the callback form and the admin sign-in. It
+switches on the moment both keys are in Vercel; until then the forms work
+exactly as before.
+
+1. Cloudflare → Turnstile → the widget. **Hostnames:** `www.labladies.net`,
+   `labladies.net`, `labladies-website.vercel.app` (still a way into /admin),
+   and `labladies.com` for later. Mode: **Managed**.
+2. Vercel → Environment Variables, all environments:
+   - `NEXT_PUBLIC_TURNSTILE_SITE_KEY` = the **Site key**
+   - `TURNSTILE_SECRET_KEY` = the **Secret key**
+3. **Redeploy** — the site key is baked in at build time, so saving the
+   variable alone does nothing.
+4. Check: submit the form on the live site; it should say thank you. Sign out
+   and back into /admin.
+
+How it behaves: invisible for nearly everyone (it only shows a checkbox to a
+visitor Cloudflare finds suspicious). A missing, invalid or reused token is
+refused before anything is stored or any password compared. If Cloudflare is
+unreachable, or the secret is wrong, the submission goes through and the
+problem is logged — a real person asking for a blood draw shouldn't be turned
+away by a third-party outage or a typo in Vercel. It only enforces when *both*
+keys are set, so a half-finished setup can't lock anyone out of the admin.
 
 ## 3. Domains
 

@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { Turnstile, type TurnstileHandle } from "@/components/Turnstile";
 
 /** Tall, high-contrast fields — this gets typed on a phone, often in a car. */
 const fieldClass =
@@ -14,17 +15,22 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  // The sign-in has no rate limit of its own and one shared password, which
+  // makes it the form a bot would actually hammer.
+  const turnstile = useRef<TurnstileHandle>(null);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError(null);
 
+    const turnstileToken = await turnstile.current?.getToken();
+
     try {
       const res = await fetch("/api/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, turnstile_token: turnstileToken }),
       });
 
       if (res.ok) {
@@ -36,8 +42,10 @@ export default function LoginForm() {
       const data = await res.json().catch(() => ({}));
       setError(data.error || "That email and password didn't match.");
       setPassword("");
+      turnstile.current?.reset();
     } catch {
       setError("Couldn't reach the server. Try again.");
+      turnstile.current?.reset();
     } finally {
       setBusy(false);
     }
@@ -93,6 +101,8 @@ export default function LoginForm() {
           placeholder="Password"
           className={fieldClass}
         />
+
+        <Turnstile ref={turnstile} action="admin-login" className="mt-4" />
 
         {error && (
           <p role="alert" className="mt-3 text-sm font-semibold text-brand-ink">

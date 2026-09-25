@@ -20,6 +20,11 @@ export async function sendMail(opts: {
   to: string;
   subject: string;
   html: string;
+  /**
+   * Where "Reply" goes. For a form notification that's the person who filled
+   * it in, so Michelle can answer straight from her inbox.
+   */
+  replyTo?: string | null;
   logAs: string;
 }): Promise<SendResult> {
   const apiKey = process.env.RESEND_API_KEY;
@@ -34,8 +39,11 @@ export async function sendMail(opts: {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: process.env.ALERT_FROM || "Lab Ladies <onboarding@resend.dev>",
+        // Must be an address on labladies.net: the API key is scoped to that
+        // one domain, deliberately, so it can't send as any other client.
+        from: process.env.ALERT_FROM || "Lab Ladies <notifications@labladies.net>",
         to: [opts.to],
+        reply_to: opts.replyTo || undefined,
         subject: opts.subject,
         html: opts.html,
       }),
@@ -50,6 +58,15 @@ export async function sendMail(opts: {
     console.error(`[${opts.logAs}:exception]`, err);
     return "failed";
   }
+}
+
+/** A big red button, for the one thing an email wants you to do next. */
+export function button(href: string, label: string) {
+  return `<p style="margin:22px 0 4px">
+    <a href="${escapeHtml(href)}" style="display:inline-block;background:#de0f0d;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:12px 22px;border-radius:999px">
+      ${escapeHtml(label)}
+    </a>
+  </p>`;
 }
 
 /** House style: brand-red header, plain body. */
@@ -71,8 +88,7 @@ export function shell(opts: { heading: string; intro?: string; body: string }) {
         ${opts.body}
       </div>
       <div style="border-top:1px solid #f6ead6;padding:16px 24px;font-size:12px;color:#5b5450">
-        Sent by the Lab Ladies tracking board. This message lists patient names and
-        what is outstanding — it never contains test results.
+        Sent by the Lab Ladies website. It never contains test results.
       </div>
     </div>
   </div>`;
