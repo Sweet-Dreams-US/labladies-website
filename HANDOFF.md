@@ -3,9 +3,16 @@
 Everything below is what has to happen outside the code for the tracking board
 and the blog to be live.
 
-**Status: deployed to production 22 Sep 2026.** The board is live at
-<https://labladies-website.vercel.app/admin> with Michelle's 17 rows loaded.
-Everything in section 1 is already set; sections 2–4 are still outstanding.
+**Status:** live at <https://labladies-website.vercel.app>, moving to
+**<https://labladies.com>** — the official domain, decided 25 Sep 2026. The
+Vercel project now lives in the **Sweet Dreams' projects** team (moved from
+Team Marcuccilli the same day) and deploys from GitHub on every push to `main`.
+
+> **⚠ labladies.com is a *leased* domain** — the only one on the list that is
+> not owned outright. GoDaddy shows auto-payment due **22 Oct 2026** and a
+> "Validate billing details" warning. If that lease lapses, the official
+> address goes dark and every other domain redirects into nothing. Settle the
+> billing, and consider buying it out, before relying on it.
 
 ## 1. Environment variables — DONE
 
@@ -20,7 +27,7 @@ be prefixed `NEXT_PUBLIC_`.
 | `ADMIN_EMAIL` | `labladies2026@gmail.com` | The email half of the sign-in |
 | `ADMIN_PASSCODE` | in `.env.local` | The password half |
 | `ALERT_EMAIL_TO` | `labladies2026@gmail.com` | Where overdue alerts go |
-| `ALERT_FROM` | `Lab Ladies <alerts@labladies.net>` | Needs the domain verified in Resend |
+| `ALERT_FROM` | `Lab Ladies <onboarding@resend.dev>` | Switch to `alerts@labladies.com` once verified in Resend |
 | `RESEND_API_KEY` | **still not set** | **Until this is set, alerts log instead of sending** |
 | `CRON_SECRET` | set | Vercel signs the nightly cron with it |
 
@@ -46,8 +53,8 @@ does not mark those alerts as sent, so nothing is lost — the moment the key is
 added, the backlog goes out on the next run.
 
 1. Add the Resend API key as `RESEND_API_KEY`.
-2. Verify `labladies.net` in Resend, then change `ALERT_FROM` to
-   `Lab Ladies <alerts@labladies.net>` — it is currently the
+2. Verify `labladies.com` in Resend, then change `ALERT_FROM` to
+   `Lab Ladies <alerts@labladies.com>` — it is currently the
    `onboarding@resend.dev` fallback.
 3. Redeploy.
 
@@ -63,29 +70,88 @@ Current thresholds (`ALERT_DAYS` in `src/lib/tracking-types.ts`):
 Michelle asked for "over a week" on the call, which is the first one. Adjust
 the other two once she has used it for a fortnight and has an opinion.
 
-## 3. GoDaddy domains
+## 3. Domains
 
-Michelle owns several domains. For each one:
+**`labladies.com` is the official address.** The other 13 all permanently
+redirect to it. Everything in the code already assumes this: canonical URLs,
+the sitemap, social cards, structured data and `llms.txt` all say
+`https://labladies.com`.
 
-1. Vercel → the `labladies-website` project → Settings → Domains → Add.
-2. Vercel shows the records to create. At GoDaddy, point the apex `A` record at
-   `76.76.21.21` and the `www` `CNAME` at `cname.vercel-dns.com`.
-3. Set `labladies.net` as the **primary** domain in Vercel; add the rest with
-   "Redirect to" pointing at it, so they all land on one domain and the SEO
-   value is not split across several.
-4. Once `labladies.net` resolves, confirm `site.url` in `src/lib/site.ts` still
-   matches — canonical URLs, the sitemap and the structured data all read it.
+### In Vercel — Sweet Dreams' projects → labladies-website → Settings → Domains
 
-## 4. Google Business Profile
+1. Add **`labladies.com`**. This is the production domain — no redirect.
+2. Add **`www.labladies.com`** → *Redirect to* `labladies.com` (308).
+3. Add each of these → *Redirect to* `labladies.com` (308). Add the `www.`
+   version of any you expect people to type:
+
+   | | |
+   |---|---|
+   | lab-ladies.com | lab-ladies.org |
+   | labladies.net | lab-ladies.net |
+   | labladies.org | labladies.info |
+   | lab-ladies.info | labladies.xyz |
+   | lab-ladies.xyz | labladies.store |
+   | lab-ladies.store | labladies.shop |
+   | lab-ladies.shop | |
+
+### At GoDaddy — for every domain above
+
+Use the exact records Vercel shows beside each domain once it is added. For a
+standard setup that is an `A` record on `@` → `76.76.21.21` and a `CNAME` on
+`www` → `cname.vercel-dns.com`. Delete GoDaddy's parked-page / forwarding
+records on the same names first, or they will fight Vercel's.
+
+### What the code does as a backstop
+
+`next.config.ts` redirects every domain in `aliasDomains`
+(`src/lib/site.ts`), plus its `www.`, to `https://labladies.com` with a 308 —
+path and query string kept. So if a domain is added in Vercel without the
+"Redirect to" setting, it still redirects instead of serving a duplicate copy
+of the site that competes with the real one in Google. **A new domain has to
+go in both places** — Vercel, and `aliasDomains`.
+
+Any host that isn't `labladies.com` also gets `X-Robots-Tag: noindex`. That is
+aimed at `labladies-website.vercel.app`: it keeps working (it's the way into
+/admin until DNS settles, and it's where preview deploys live) but it stays
+out of Google.
+
+**After the switch, Michelle signs into /admin again** on labladies.com — the
+login cookie belongs to the address she signed in on.
+
+## 4. Google Search Console and Bing
+
+Do this once `labladies.com` resolves.
+
+**Google — use a Domain property, verified by DNS.** Search Console → Add
+property → *Domain* → `labladies.com`. It gives a `TXT` record; add it at
+whichever DNS host is authoritative for labladies.com (GoDaddy, unless you move
+nameservers to Vercel). A Domain property covers `www.` and every other variant
+at once and needs no code. Then:
+
+1. Sitemaps → submit `sitemap.xml`.
+2. URL Inspection → `https://labladies.com` → Request indexing.
+
+Only if DNS verification isn't possible: use a URL-prefix property with the
+*HTML tag* method, put the token (the `content="…"` value only) in Vercel as
+`GOOGLE_SITE_VERIFICATION`, and redeploy. The layout emits the tag from that.
+
+**Bing** (also feeds DuckDuckGo, Yahoo and ChatGPT search): Bing Webmaster
+Tools → *Import from Google Search Console* once Google is verified. That is
+the whole job. The fallback is `BING_SITE_VERIFICATION`, same pattern.
+
+Don't add the 13 alias domains to Search Console. They redirect, and Google
+follows the redirects on its own.
+
+## 5. Google Business Profile
 
 Not created yet. It is the single highest-value thing left for local search —
 "mobile phlebotomist near me" is a map result before it is a web result. Once
 it exists, replace the placeholder `site.googleReviewUrl` in
 `src/lib/site.ts` with the real review link.
 
-## 5. What Michelle should know
+## 6. What Michelle should know
 
-- `/admin` — passcode, then the board. Works on her phone.
+- `/admin` — email and password, then the board. Works on her phone.
 - **Dashboard** is the "what fell through a crack" page; open it first.
 - **Tracking** is her sheet. Tabs across the top filter it; the Y/N cells are
   clickable to flip.
@@ -105,7 +171,7 @@ it exists, replace the placeholder `site.googleReviewUrl` in
   time is filled in automatically. Anything left on New for a day shows up in
   the overdue list and the nightly email.
 
-## 6. Open items
+## 7. Open items
 
 - Rates for the pricing page (everything currently reads "Call for pricing").
 - Confirm Dr. Lubin / Dr. Vega / Dr. Guia's practice affiliations.

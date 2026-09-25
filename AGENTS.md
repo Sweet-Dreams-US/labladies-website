@@ -14,8 +14,13 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 (co-owner, Laboratory Supervisor). Nurse-owned concierge mobile laboratory service.
 
 **Live URLs**
-- Vercel prod: https://labladies-website.vercel.app
-- Target domain: labladies.net (client owns several domains at GoDaddy; DNS not yet pointed)
+- **Official domain: https://labladies.com** (decided 25 Sep 2026). It is a
+  *leased* domain at GoDaddy — see HANDOFF.md.
+- 13 alias domains 308-redirect to it; the list is `aliasDomains` in
+  `src/lib/site.ts` and `next.config.ts` builds the redirects from it.
+- Vercel: project `labladies-website` in the **Sweet Dreams' projects** team,
+  Git-connected — pushes to `main` deploy to production.
+  https://labladies-website.vercel.app stays live but is noindexed.
 - Repo: https://github.com/Sweet-Dreams-US/labladies-website
 
 **NAP — never change without client sign-off**
@@ -185,10 +190,42 @@ Added for the "keep us near the top for mobile phlebotomist" ask on the call.
   or imply what a result means.
 - `faq` on a post renders both as accordions and as FAQPage schema.
 
+# SEO & metadata plumbing
+
+Every piece of this is a Next file convention or `metadata` export; there is
+no SEO library.
+
+- **Canonicals.** The root layout deliberately sets *no* canonical — set there,
+  it is inherited by any page that forgets its own, and that page then tells
+  Google it's a duplicate of the homepage. Every page sets its own
+  `alternates.canonical`. A new page must too.
+- **Titles** stay under ~60 characters rendered (including " | Lab Ladies")
+  and lead with the service and the place. Descriptions under ~158.
+- **Icons:** `app/favicon.ico` (16/32/48 — 48 is what Google's search-result
+  favicon wants), `app/icon.png` (192, a multiple of 48 for the same reason),
+  `app/apple-icon.png` (180, *opaque* — iOS paints transparency black), and
+  the manifest icons in `public/icons/` (the maskable one keeps the logo inside
+  the 80% safe zone). All generated from `public/labladies-logo.png`.
+- **Share images:** `app/opengraph-image.png` / `twitter-image.png` site-wide;
+  `blog/[slug]/opengraph-image.tsx` renders a per-post card with the headline,
+  at build, using the vendored `src/assets/fonts/Inter-ExtraBold.ttf`. Next
+  appends a hash to generated image routes, so **never hand-write a URL to the
+  per-post image** — schema uses the stable site-wide PNG for that reason.
+- **Structured data** is one `@graph` in `(site)/layout.tsx` with `#business`
+  and `#website` nodes. Blog posts reference them by `@id` rather than
+  restating the business. No street address on purpose: service-area business.
+- **`/llms.txt`** is a plain summary for AI assistants, built from the same
+  data as the pages.
+- **Verification** tags come from `GOOGLE_SITE_VERIFICATION` /
+  `BING_SITE_VERIFICATION` env vars, and are only the fallback — a DNS-verified
+  Domain property is the recommended route.
+- **`siteUpdated`** in `site.ts` is what the sitemap reports for the static
+  pages. Bump it when page copy changes. Don't swap it for `new Date()`.
+
 # Still outstanding
 
-- **GoDaddy domains** → point at the Vercel project and redirect to the primary.
-  DNS work, not code. See `HANDOFF.md`.
+- **Domains** → Cole is adding them in Vercel and GoDaddy. See `HANDOFF.md`.
+- **Search Console / Bing Webmaster** — once labladies.com resolves.
 - **Google Business Profile** does not exist yet; `site.googleReviewUrl` is
   still a search-URL placeholder.
 - **Pricing** rows are all `null` ("Call for pricing") pending Michelle's rates.

@@ -15,9 +15,9 @@ import { InquiryForm } from "@/components/InquiryForm";
 import { appointmentWindows, site } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Contact",
+  title: "Book a Mobile Blood Draw — Call or Text",
   description:
-    "Call or text Lab Ladies at 954-605-3725 to schedule mobile lab collection in Palm Beach and Broward County. Email labladies2026@gmail.com.",
+    "Call or text 954-605-3725 to book mobile lab collection anywhere in Palm Beach or Broward County, or request a callback online.",
   alternates: { canonical: "/contact" },
 };
 

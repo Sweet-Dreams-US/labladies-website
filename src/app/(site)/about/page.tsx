@@ -14,9 +14,9 @@ import {
 import { site, whyChooseUs } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "About Us",
+  title: "About Our Nurse-Owned Mobile Lab",
   description:
-    "Lab Ladies is nurse-owned and operated by Michelle G., RN, BSN and Sandra S., a laboratory supervisor with 25+ years of experience serving South Florida.",
+    "Nurse-owned and operated by Michelle G., RN, BSN and Sandra S., a laboratory supervisor with 25+ years of experience serving South Florida.",
   alternates: { canonical: "/about" },
 };
 

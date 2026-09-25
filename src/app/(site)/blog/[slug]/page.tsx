@@ -27,6 +27,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: post.description,
       url: `${site.url}/blog/${post.slug}`,
       publishedTime: post.date,
+      modifiedTime: post.date,
+      section: post.category,
+      authors: [site.name],
+      // The image itself comes from the sibling opengraph-image.tsx.
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.description,
     },
   };
 }
@@ -44,17 +53,51 @@ export default async function PostPage({ params }: Props) {
    * the answer itself rather than just a link, which is the whole point of
    * writing these.
    */
+  const url = `${site.url}/blog/${post.slug}`;
+
+  /**
+   * Article, BreadcrumbList and — where the post has one — FAQPage.
+   *
+   * The FAQ block is what lets a direct question ("what is a mobile
+   * phlebotomist") surface the answer itself rather than a bare link. The
+   * breadcrumb gives the result a "Lab Ladies › Blog › …" trail instead of a
+   * raw URL. The publisher points at the site-wide `#business` node rather
+   * than restating the business, so the two can never drift apart.
+   */
   const jsonLd = [
     {
       "@context": "https://schema.org",
-      "@type": "Article",
+      "@type": "BlogPosting",
+      "@id": `${url}#article`,
       headline: post.title,
       description: post.description,
       datePublished: post.date,
       dateModified: post.date,
-      author: { "@type": "Organization", name: site.name },
-      publisher: { "@type": "Organization", name: site.name },
-      mainEntityOfPage: `${site.url}/blog/${post.slug}`,
+      inLanguage: "en-US",
+      articleSection: post.category,
+      // The stable site-wide card, not the per-post one: Next appends a
+      // build-generated hash to generated image routes, so a hand-written URL
+      // to the per-post image 404s — and a broken schema image is a Search
+      // Console warning. The og:image tag still carries the per-post card.
+      image: {
+        "@type": "ImageObject",
+        url: `${site.url}/opengraph-image.png`,
+        width: 1200,
+        height: 630,
+      },
+      author: { "@id": `${site.url}/#business` },
+      publisher: { "@id": `${site.url}/#business` },
+      isPartOf: { "@id": `${site.url}/#website` },
+      mainEntityOfPage: url,
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Home", item: site.url },
+        { "@type": "ListItem", position: 2, name: "Blog", item: `${site.url}/blog` },
+        { "@type": "ListItem", position: 3, name: post.title, item: url },
+      ],
     },
     ...(post.faq?.length
       ? [

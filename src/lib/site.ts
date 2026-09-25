@@ -4,7 +4,8 @@ export const site = {
   tagline: "We Come to You!",
   longTagline:
     "Experienced Nurses. Experienced Laboratory Leadership. Exceptional Mobile Diagnostic Services.",
-  url: "https://labladies.net",
+  /** The one official address. Every other domain 308-redirects here. */
+  url: "https://labladies.com",
   phone: "954-605-3725",
   phoneHref: "tel:+19546053725",
   smsHref: "sms:+19546053725",
@@ -215,3 +216,35 @@ export const pricing = {
     { service: "Medical courier / contracted pickups", price: null },
   ] as { service: string; price: string | null }[],
 };
+
+/**
+ * Every other domain the business owns, all of which permanently redirect to
+ * `site.url`. `next.config.ts` builds its redirects from this list, so a
+ * domain added in Vercel but left off here still gets served — it just won't
+ * redirect. Keep the two in step.
+ *
+ * `www.` versions are covered automatically; don't list them.
+ */
+export const aliasDomains = [
+  "lab-ladies.com",
+  "labladies.net",
+  "lab-ladies.net",
+  "labladies.org",
+  "lab-ladies.org",
+  "labladies.info",
+  "lab-ladies.info",
+  "labladies.xyz",
+  "lab-ladies.xyz",
+  "labladies.store",
+  "lab-ladies.store",
+  "labladies.shop",
+  "lab-ladies.shop",
+] as const;
+
+/**
+ * When the site's content last materially changed. The sitemap reports this
+ * for the static pages rather than the build time — stamping "today" on every
+ * page at every deploy teaches Google the date means nothing.
+ * Bump it when page copy changes; blog posts carry their own dates.
+ */
+export const siteUpdated = "2026-09-25";

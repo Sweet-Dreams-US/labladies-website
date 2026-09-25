@@ -15,9 +15,9 @@ import {
 import { site, specializedServices } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Advanced PCR Testing",
+  title: "At-Home PCR Testing in Palm Beach & Broward",
   description:
-    "Advanced molecular PCR collection across South Florida — urine, respiratory, wound and GI PCR, including specialized collection for patients who cannot provide a clean-catch specimen. Call 954-605-3725.",
+    "Urine, respiratory, wound and GI PCR collection at home — including for patients who cannot give a clean-catch sample. Call 954-605-3725.",
   alternates: { canonical: "/pcr-testing" },
 };
 

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import {
   BoltIcon,
@@ -28,6 +29,19 @@ import {
   whoWeServe,
   whyChooseUs,
 } from "@/lib/site";
+
+/**
+ * The homepage is the only page that claims "/" as its canonical. It used to
+ * inherit that from the root layout, which meant any page that forgot to set
+ * its own canonical would claim to be the homepage too.
+ */
+export const metadata: Metadata = {
+  // Leads with "mobile phlebotomist" — the phrase Michelle asked to rank for —
+  // and stays under ~60 characters so Google shows it whole. `absolute` skips
+  // the layout's "%s | Lab Ladies" template, which would double the brand.
+  title: { absolute: "Mobile Phlebotomist in Palm Beach & Broward | Lab Ladies" },
+  alternates: { canonical: "/" },
+};
 
 const trustChips = [
   { icon: ClockIcon, title: "Quick Testing", note: "Appointments that fit your day" },

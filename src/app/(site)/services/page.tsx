@@ -15,9 +15,9 @@ import {
 import { appointmentWindows, services, site, specializedServices } from "@/lib/site";
 
 export const metadata: Metadata = {
-  title: "Mobile Lab Services",
+  title: "Mobile Blood Draws & Lab Services",
   description:
-    "Mobile blood draws, culture & sensitivity, advanced PCR testing, drug testing, STD rapid testing and gender reveal DNA testing — collected at your home or facility in Palm Beach and Broward County.",
+    "Mobile blood draws, PCR testing, culture & sensitivity, drug and STD testing — collected at your home or facility in Palm Beach and Broward County.",
   alternates: { canonical: "/services" },
 };
 

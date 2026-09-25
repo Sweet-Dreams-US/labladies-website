@@ -9,59 +9,93 @@ import { site } from "@/lib/site";
  */
 
 /**
- * Site-wide MedicalBusiness schema.
+ * Site-wide structured data, as one linked graph.
  *
  * This is the half of "show up for mobile phlebotomist searches" that isn't
- * blog posts: it tells Google and the AI crawlers what this business is,
- * where it works and what it offers, in a form they don't have to infer from
- * prose. `areaServed` carries the two counties by name because that is how
- * people actually search — the county, not a street address.
+ * blog posts: it tells Google, Bing and the AI crawlers what this business is,
+ * where it works and what it offers, without making them infer it from prose.
+ *
+ * Nodes reference each other by `@id`, so the blog's Article schema can point
+ * its publisher at `#business` rather than restating the business every time.
+ *
+ * `areaServed` names the two counties because that is how people search — the
+ * county, not a street address. There is deliberately no street address:
+ * this is a service-area business that comes to the patient, and Google's
+ * guidelines are to hide the address for those rather than publish one.
  */
+const BUSINESS_ID = `${site.url}/#business`;
+
 const jsonLd = {
   "@context": "https://schema.org",
-  "@type": "MedicalBusiness",
-  "@id": `${site.url}/#business`,
-  name: site.name,
-  alternateName: site.shortName,
-  slogan: site.tagline,
-  description:
-    "Nurse-owned concierge mobile laboratory service providing specimen collection at home, in medical offices and in senior living communities across South Florida.",
-  url: site.url,
-  telephone: "+1-954-605-3725",
-  faxNumber: "+1-561-461-6207",
-  email: site.email,
-  priceRange: "$$",
-  currenciesAccepted: "USD",
-  paymentAccepted: "Cash, Check, Credit Card",
-  areaServed: [
-    { "@type": "AdministrativeArea", name: "Palm Beach County, Florida" },
-    { "@type": "AdministrativeArea", name: "Broward County, Florida" },
+  "@graph": [
+    {
+      "@type": ["MedicalBusiness", "LocalBusiness"],
+      "@id": BUSINESS_ID,
+      name: site.name,
+      alternateName: site.shortName,
+      slogan: site.tagline,
+      description:
+        "Nurse-owned concierge mobile laboratory service providing specimen collection at home, in medical offices and in senior living communities across South Florida.",
+      url: site.url,
+      logo: {
+        "@type": "ImageObject",
+        url: `${site.url}/icons/icon-512.png`,
+        width: 512,
+        height: 512,
+      },
+      image: `${site.url}/opengraph-image.png`,
+      telephone: "+1-954-605-3725",
+      faxNumber: "+1-561-461-6207",
+      email: site.email,
+      priceRange: "$$",
+      currenciesAccepted: "USD",
+      paymentAccepted: "Cash, Check, Credit Card",
+      areaServed: [
+        { "@type": "AdministrativeArea", name: "Palm Beach County, Florida" },
+        { "@type": "AdministrativeArea", name: "Broward County, Florida" },
+      ],
+      address: { "@type": "PostalAddress", addressRegion: "FL", addressCountry: "US" },
+      medicalSpecialty: "Pathology",
+      knowsAbout: [
+        "Mobile phlebotomy",
+        "Mobile blood draw",
+        "Difficult venipuncture",
+        "Urine PCR testing collection",
+        "Respiratory PCR collection",
+        "Geriatric specimen collection",
+        "Medical courier services",
+      ],
+      availableService: [
+        "Mobile blood draw",
+        "Advanced PCR testing collection",
+        "Culture and sensitivity collection",
+        "Drug testing",
+        "STD rapid testing",
+        "Gender reveal DNA testing",
+        "Medical courier services",
+      ].map((name) => ({ "@type": "MedicalTest", name })),
+      contactPoint: {
+        "@type": "ContactPoint",
+        telephone: "+1-954-605-3725",
+        contactType: "customer service",
+        areaServed: "US-FL",
+        availableLanguage: ["English"],
+      },
+      potentialAction: {
+        "@type": "CommunicateAction",
+        name: "Call Lab Ladies",
+        target: site.phoneHref,
+      },
+    },
+    {
+      "@type": "WebSite",
+      "@id": `${site.url}/#website`,
+      url: site.url,
+      name: site.shortName,
+      inLanguage: "en-US",
+      publisher: { "@id": BUSINESS_ID },
+    },
   ],
-  address: { "@type": "PostalAddress", addressRegion: "FL", addressCountry: "US" },
-  medicalSpecialty: "Pathology",
-  knowsAbout: [
-    "Mobile phlebotomy",
-    "Mobile blood draw",
-    "Difficult venipuncture",
-    "Urine PCR testing collection",
-    "Respiratory PCR collection",
-    "Geriatric specimen collection",
-    "Medical courier services",
-  ],
-  availableService: [
-    "Mobile blood draw",
-    "Advanced PCR testing collection",
-    "Culture and sensitivity collection",
-    "Drug testing",
-    "STD rapid testing",
-    "Gender reveal DNA testing",
-    "Medical courier services",
-  ].map((name) => ({ "@type": "MedicalTest", name })),
-  potentialAction: {
-    "@type": "CommunicateAction",
-    name: "Call Lab Ladies",
-    target: site.phoneHref,
-  },
 };
 
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
