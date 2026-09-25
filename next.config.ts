@@ -1,21 +1,21 @@
 import type { NextConfig } from "next";
-import { aliasDomains, site } from "./src/lib/site";
+import { ownedDomains, site } from "./src/lib/site";
 
-const canonicalHost = new URL(site.url).host; // "labladies.com"
+const canonicalHost = new URL(site.url).host; // e.g. "www.labladies.net"
 
 /**
- * Every host that should land on the canonical one: each alias domain, its
- * www., and www. of the canonical domain itself.
+ * Every host that should land on the canonical one: each owned domain and its
+ * www., minus the canonical host itself — leaving it in would redirect the
+ * live site to itself.
  *
  * Vercel's own "Redirect to" setting on each domain does the same job, and
  * should be set too. This is the backstop — a domain added in the dashboard
  * without that setting would otherwise serve a full duplicate copy of the
  * site, and Google splits ranking across duplicates.
  */
-const redirectHosts = [
-  `www.${canonicalHost}`,
-  ...aliasDomains.flatMap((d) => [d, `www.${d}`]),
-];
+const redirectHosts = ownedDomains
+  .flatMap((d) => [d, `www.${d}`])
+  .filter((host) => host !== canonicalHost);
 
 const nextConfig: NextConfig = {
   async redirects() {

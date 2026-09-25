@@ -4,8 +4,22 @@ export const site = {
   tagline: "We Come to You!",
   longTagline:
     "Experienced Nurses. Experienced Laboratory Leadership. Exceptional Mobile Diagnostic Services.",
-  /** The one official address. Every other domain 308-redirects here. */
-  url: "https://labladies.com",
+  /**
+   * The one official address. Every other domain 308-redirects here, and it
+   * is what every canonical tag, the sitemap and the structured data say.
+   *
+   * Set by NEXT_PUBLIC_SITE_URL in Vercel so the switch is a setting, not a
+   * code change. It MUST be the domain Vercel marks "Production" — not one
+   * Vercel itself redirects. If Vercel sends labladies.net → www.labladies.net
+   * and this said labladies.net, the two redirects would bounce a visitor
+   * back and forth forever.
+   *
+   * The fallback is the domain that actually serves the site today.
+   * labladies.com is the intended home, but as of 25 Sep 2026 it is still on
+   * Afternic's parking nameservers; pointing here before it resolves to Vercel
+   * sends every visitor to a blank parked page. See HANDOFF.md.
+   */
+  url: (process.env.NEXT_PUBLIC_SITE_URL || "https://www.labladies.net").replace(/\/$/, ""),
   phone: "954-605-3725",
   phoneHref: "tel:+19546053725",
   smsHref: "sms:+19546053725",
@@ -218,14 +232,16 @@ export const pricing = {
 };
 
 /**
- * Every other domain the business owns, all of which permanently redirect to
- * `site.url`. `next.config.ts` builds its redirects from this list, so a
- * domain added in Vercel but left off here still gets served — it just won't
- * redirect. Keep the two in step.
+ * Every domain the business owns. Whichever one `site.url` names is served;
+ * every other one, and every `www.` variant, permanently redirects to it.
+ * `next.config.ts` builds its redirects from this list, so a domain added in
+ * Vercel but left off here still gets served — it just won't redirect. Keep
+ * the two in step.
  *
  * `www.` versions are covered automatically; don't list them.
  */
-export const aliasDomains = [
+export const ownedDomains = [
+  "labladies.com",
   "lab-ladies.com",
   "labladies.net",
   "lab-ladies.net",
