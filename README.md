@@ -3,7 +3,7 @@
 Nurse-owned concierge mobile laboratory services for Palm Beach and Broward County, Florida.
 
 - **Live:** https://labladies-website.vercel.app
-- **Domain:** labladies.com (13 alias domains redirect to it — see HANDOFF.md)
+- **Domain:** www.labladies.net for now, labladies.com later (set by `NEXT_PUBLIC_SITE_URL` — see HANDOFF.md)
 - **Contact:** 954-605-3725 · labladies2026@gmail.com
 
 ## Stack

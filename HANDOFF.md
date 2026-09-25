@@ -3,8 +3,9 @@
 Everything below is what has to happen outside the code for the tracking board
 and the blog to be live.
 
-**Status:** live at <https://labladies-website.vercel.app>, moving to
-**<https://labladies.com>** — the official domain, decided 25 Sep 2026. The
+**Status:** live at **<https://www.labladies.net>** — the official domain for
+now. **labladies.com** is the intended long-term home but can't be pointed
+yet (see §3). The
 Vercel project now lives in the **Sweet Dreams' projects** team (moved from
 Team Marcuccilli the same day) and deploys from GitHub on every push to `main`.
 
@@ -24,10 +25,11 @@ be prefixed `NEXT_PUBLIC_`.
 | `SUPABASE_URL` | `https://nxhwqtqroyerbbklywyn.supabase.co` | Shared FreeWebsites project |
 | `SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_cVzB-1BXi5iuK3PIjAHFrQ_Tk76Gvpn` | Reads nothing on its own |
 | `SUPABASE_ADMIN_TOKEN` | in `.env.local` | Unlocks only the `ll_` tables |
+| `NEXT_PUBLIC_SITE_URL` | `https://www.labladies.net` | The official domain — see §3 before changing |
 | `ADMIN_EMAIL` | `labladies2026@gmail.com` | The email half of the sign-in |
 | `ADMIN_PASSCODE` | in `.env.local` | The password half |
 | `ALERT_EMAIL_TO` | `labladies2026@gmail.com` | Where overdue alerts go |
-| `ALERT_FROM` | `Lab Ladies <onboarding@resend.dev>` | Switch to `alerts@labladies.com` once verified in Resend |
+| `ALERT_FROM` | `Lab Ladies <onboarding@resend.dev>` | Switch to `alerts@labladies.net` once verified in Resend |
 | `RESEND_API_KEY` | **still not set** | **Until this is set, alerts log instead of sending** |
 | `CRON_SECRET` | set | Vercel signs the nightly cron with it |
 
@@ -53,8 +55,9 @@ does not mark those alerts as sent, so nothing is lost — the moment the key is
 added, the backlog goes out on the next run.
 
 1. Add the Resend API key as `RESEND_API_KEY`.
-2. Verify `labladies.com` in Resend, then change `ALERT_FROM` to
-   `Lab Ladies <alerts@labladies.com>` — it is currently the
+2. Verify `labladies.net` in Resend (add its records alongside the Microsoft
+   365 ones — don't replace them), then change `ALERT_FROM` to
+   `Lab Ladies <alerts@labladies.net>` — it is currently the
    `onboarding@resend.dev` fallback.
 3. Redeploy.
 
@@ -72,64 +75,71 @@ the other two once she has used it for a fortnight and has an opinion.
 
 ## 3. Domains
 
-**`labladies.com` is the official address.** The other 13 all permanently
-redirect to it. Everything in the code already assumes this: canonical URLs,
-the sitemap, social cards, structured data and `llms.txt` all say
-`https://labladies.com`.
+**Today: `https://www.labladies.net` is the official address.** Every other
+owned domain redirects to it. `labladies.com` will take over once it can be
+pointed at Vercel.
 
-### In Vercel — Sweet Dreams' projects → labladies-website → Settings → Domains
+The official address is one setting — **`NEXT_PUBLIC_SITE_URL`** in Vercel —
+not code. Canonical tags, the sitemap, social cards, structured data,
+`llms.txt` and the redirects all follow it. The list of owned domains is
+`ownedDomains` in `src/lib/site.ts`; whichever one `NEXT_PUBLIC_SITE_URL` names
+is served, and the rest (plus every `www.`) 308 to it.
 
-1. Add **`labladies.com`**. This is the production domain — no redirect.
-2. Add **`www.labladies.com`** → *Redirect to* `labladies.com` (308).
-3. Add each of these → *Redirect to* `labladies.com` (308). Add the `www.`
-   version of any you expect people to type:
+> **The one rule:** `NEXT_PUBLIC_SITE_URL` must be the domain Vercel marks
+> **Production** — never one Vercel itself redirects. Vercel currently sends
+> `labladies.net` → `www.labladies.net`, so the setting is
+> `https://www.labladies.net`. If it said `https://labladies.net`, Vercel and
+> the site would redirect visitors back and forth forever.
 
-   | | |
-   |---|---|
-   | lab-ladies.com | lab-ladies.org |
-   | labladies.net | lab-ladies.net |
-   | labladies.org | labladies.info |
-   | lab-ladies.info | labladies.xyz |
-   | lab-ladies.xyz | labladies.store |
-   | lab-ladies.store | labladies.shop |
-   | lab-ladies.shop | |
+### Switching to labladies.com, when it's possible
 
-### At GoDaddy — for every domain above
+It can't be pointed today: its nameservers are `ns5/ns6.afternic.com` —
+GoDaddy's lease/marketplace service — so its DNS isn't editable like the
+others. That's tied to the lease. Once GoDaddy lets you manage its DNS:
 
-Use the exact records Vercel shows beside each domain once it is added. For a
-standard setup that is an `A` record on `@` → `76.76.21.21` and a `CNAME` on
-`www` → `cname.vercel-dns.com`. Delete GoDaddy's parked-page / forwarding
-records on the same names first, or they will fight Vercel's.
+1. At GoDaddy, point `labladies.com` at Vercel (the records Vercel shows).
+2. In Vercel → Domains, add `labladies.com` as **Production** and
+   `www.labladies.com` → redirect to it. Wait for *Valid Configuration*.
+3. **Check <https://labladies.com> shows the site.** Not before — pointing the
+   site at .com while it's still parked sends every visitor to a blank page.
+   That happened for a short while on 25 Sep.
+4. Set `NEXT_PUBLIC_SITE_URL` = `https://labladies.com` (all environments).
+5. Redeploy. The .net domains now 308 to .com, which carries the ranking over.
+6. In Search Console, add a Domain property for labladies.com as well.
 
-### What the code does as a backstop
+### Adding the other domains
 
-`next.config.ts` redirects every domain in `aliasDomains`
-(`src/lib/site.ts`), plus its `www.`, to `https://labladies.com` with a 308 —
-path and query string kept. So if a domain is added in Vercel without the
-"Redirect to" setting, it still redirects instead of serving a duplicate copy
-of the site that competes with the real one in Google. **A new domain has to
-go in both places** — Vercel, and `aliasDomains`.
+Each one either points its DNS at Vercel and is added in Vercel with
+*Redirect to* `www.labladies.net`, or uses GoDaddy's own Forwarding (as
+`lab-ladies.net` does) to `https://www.labladies.net`. Both work. Pointing at
+Vercel is slightly better — one hop instead of two — and the code redirects
+any owned domain that reaches Vercel even if its "Redirect to" isn't set.
 
-Any host that isn't `labladies.com` also gets `X-Robots-Tag: noindex`. That is
-aimed at `labladies-website.vercel.app`: it keeps working (it's the way into
-/admin until DNS settles, and it's where preview deploys live) but it stays
-out of Google.
+> **Don't touch the email records on labladies.net.** Its DNS carries a live
+> Microsoft 365 setup with Proofpoint filtering — the `MX`, `autodiscover`,
+> `lyncdiscover`, `sip`, `msoid` and `_sip…` records and the SPF / DMARC /
+> `onmicrosoft.com` TXT records. Only the `A @` and `CNAME www` records are
+> the website. Leave the nameservers at GoDaddy too; moving them to Vercel
+> would drop those records unless every one is recreated first.
 
-**After the switch, Michelle signs into /admin again** on labladies.com — the
-login cookie belongs to the address she signed in on.
+Any host that isn't the official one also gets `X-Robots-Tag: noindex` —
+mainly `labladies-website.vercel.app`, which keeps working (preview deploys,
+and a way into /admin) without competing in Google.
+
+**After any domain switch, Michelle signs into /admin again** on the new
+address — the login cookie belongs to the address she signed in on.
 
 ## 4. Google Search Console and Bing
 
-Do this once `labladies.com` resolves.
+Do this now, for **labladies.net**.
 
 **Google — use a Domain property, verified by DNS.** Search Console → Add
-property → *Domain* → `labladies.com`. It gives a `TXT` record; add it at
-whichever DNS host is authoritative for labladies.com (GoDaddy, unless you move
-nameservers to Vercel). A Domain property covers `www.` and every other variant
+property → *Domain* → `labladies.net`. It gives a `TXT` record; add it at
+GoDaddy, alongside the existing records. A Domain property covers `www.` and every other variant
 at once and needs no code. Then:
 
 1. Sitemaps → submit `sitemap.xml`.
-2. URL Inspection → `https://labladies.com` → Request indexing.
+2. URL Inspection → `https://www.labladies.net` → Request indexing.
 
 Only if DNS verification isn't possible: use a URL-prefix property with the
 *HTML tag* method, put the token (the `content="…"` value only) in Vercel as
@@ -139,7 +149,7 @@ Only if DNS verification isn't possible: use a URL-prefix property with the
 Tools → *Import from Google Search Console* once Google is verified. That is
 the whole job. The fallback is `BING_SITE_VERIFICATION`, same pattern.
 
-Don't add the 13 alias domains to Search Console. They redirect, and Google
+Don't add the other domains to Search Console. They redirect, and Google
 follows the redirects on its own.
 
 ## 5. Google Business Profile
