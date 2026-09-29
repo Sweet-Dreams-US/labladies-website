@@ -14,12 +14,11 @@ export const site = {
    * and this said labladies.net, the two redirects would bounce a visitor
    * back and forth forever.
    *
-   * The fallback is the domain that actually serves the site today.
-   * labladies.com is the intended home, but as of 25 Sep 2026 it is still on
-   * Afternic's parking nameservers; pointing here before it resolves to Vercel
-   * sends every visitor to a blank parked page. See HANDOFF.md.
+   * The fallback matches production: since 29 Sep 2026 Vercel serves
+   * www.labladies.com, with labladies.com redirecting to it. Every .net
+   * domain is an alias now.
    */
-  url: (process.env.NEXT_PUBLIC_SITE_URL || "https://www.labladies.net").replace(/\/$/, ""),
+  url: (process.env.NEXT_PUBLIC_SITE_URL || "https://www.labladies.com").replace(/\/$/, ""),
   phone: "954-605-3725",
   phoneHref: "tel:+19546053725",
   smsHref: "sms:+19546053725",
