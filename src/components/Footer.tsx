@@ -3,12 +3,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { MailIcon, PhoneIcon, PinIcon } from "@/components/Icons";
 import type { SiteSettings } from "@/lib/settings";
-import { nav, site } from "@/lib/site";
+import { site } from "@/lib/site";
+import type { NavItem } from "@/lib/site";
 
 // Only the credit line uses it, so only the Latin subset of one weight loads.
 const anton = Anton({ subsets: ["latin"], weight: "400", display: "swap" });
 
-export function Footer({ settings }: { settings: SiteSettings }) {
+export function Footer({ settings, nav }: { settings: SiteSettings; nav: readonly NavItem[] }) {
   return (
     <footer className="bg-ink text-white">
       <div className="mx-auto grid w-full max-w-6xl gap-10 px-5 py-14 sm:px-8 md:grid-cols-3">

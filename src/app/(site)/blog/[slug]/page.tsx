@@ -2,14 +2,21 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Accordion } from "@/components/Accordion";
+import { PostBody } from "@/components/PostBody";
+import { PostToc } from "@/components/PostToc";
 import { CallButton, Heading, Section, TextButton } from "@/components/ui";
-import { formatPostDate, getPost, posts, sortedPosts } from "@/lib/blog";
+import { formatPostDate, getHeadings, getPost, getReleasedPosts } from "@/lib/blog";
 import { site } from "@/lib/site";
 
 type Props = { params: Promise<{ slug: string }> };
 
+// A post is checked against today's date in Fort Wayne every time this page
+// is rendered, and pages are rendered again at least hourly. So a post goes
+// live on its release date without a deploy, and before that it is a 404.
+export const revalidate = 3600;
+
 export function generateStaticParams() {
-  return posts.map((p) => ({ slug: p.slug }));
+  return getReleasedPosts().map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -45,18 +52,15 @@ export default async function PostPage({ params }: Props) {
   const post = getPost(slug);
   if (!post) notFound();
 
-  const more = sortedPosts.filter((p) => p.slug !== post.slug).slice(0, 2);
+  const more = getReleasedPosts()
+    .filter((p) => p.slug !== post.slug)
+    .slice(0, 2);
+  const headings = getHeadings(post);
 
-  /**
-   * Article plus, where the post has one, an FAQPage block. The FAQ schema is
-   * what lets a direct question — "what is a mobile phlebotomist" — surface
-   * the answer itself rather than just a link, which is the whole point of
-   * writing these.
-   */
   const url = `${site.url}/blog/${post.slug}`;
 
   /**
-   * Article, BreadcrumbList and — where the post has one — FAQPage.
+   * Article, BreadcrumbList and, where the post has one, FAQPage.
    *
    * The FAQ block is what lets a direct question ("what is a mobile
    * phlebotomist") surface the answer itself rather than a bare link. The
@@ -77,7 +81,7 @@ export default async function PostPage({ params }: Props) {
       articleSection: post.category,
       // The stable site-wide card, not the per-post one: Next appends a
       // build-generated hash to generated image routes, so a hand-written URL
-      // to the per-post image 404s — and a broken schema image is a Search
+      // to the per-post image 404s, and a broken schema image is a Search
       // Console warning. The og:image tag still carries the per-post card.
       image: {
         "@type": "ImageObject",
@@ -89,6 +93,13 @@ export default async function PostPage({ params }: Props) {
       publisher: { "@id": `${site.url}/#business` },
       isPartOf: { "@id": `${site.url}/#website` },
       mainEntityOfPage: url,
+      ...(post.sources?.some((s) => s.url)
+        ? {
+            citation: post.sources
+              .filter((s) => s.url)
+              .map((s) => ({ "@type": "CreativeWork", name: s.title, url: s.url })),
+          }
+        : {}),
     },
     {
       "@context": "https://schema.org",
@@ -137,47 +148,43 @@ export default async function PostPage({ params }: Props) {
 
       <Section>
         <div className="mx-auto max-w-3xl">
-          <article className="space-y-6">
-            {post.body.map((block, i) => {
-              if (block.t === "h2") {
-                return (
-                  <h2
-                    key={i}
-                    className="pt-4 text-2xl font-extrabold tracking-tight text-balance sm:text-3xl"
-                  >
-                    {block.text}
-                  </h2>
-                );
-              }
-              if (block.t === "list") {
-                return (
-                  <ul key={i} className="space-y-3 pl-1">
-                    {block.items.map((item) => (
-                      <li key={item} className="flex gap-3">
-                        <span aria-hidden className="mt-2.5 h-2 w-2 shrink-0 rounded-full bg-brand" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                );
-              }
-              if (block.t === "quote") {
-                return (
-                  <blockquote
-                    key={i}
-                    className="border-l-4 border-brand bg-cream py-5 pl-6 text-lg font-semibold text-balance sm:text-xl"
-                  >
-                    {block.text}
-                  </blockquote>
-                );
-              }
-              return (
-                <p key={i} className="text-lg leading-relaxed">
-                  {block.text}
-                </p>
-              );
-            })}
+          {post.cover && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={post.cover}
+              alt=""
+              className="mb-10 h-auto w-full rounded-3xl border border-cream-deep"
+            />
+          )}
+
+          <article id="post-body">
+            <PostBody blocks={post.body} />
           </article>
+
+          {post.sources?.length ? (
+            <div className="mt-14">
+              <Heading as="h3">Sources</Heading>
+              <ol className="mt-5 list-decimal space-y-3 pl-6 marker:font-bold marker:text-brand-ink">
+                {post.sources.map((s) => (
+                  <li key={s.title} className="pl-1">
+                    {s.url && /^https?:\/\//i.test(s.url) ? (
+                      <a
+                        href={s.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-semibold text-brand-ink underline decoration-brand/40 underline-offset-4 hover:text-brand"
+                      >
+                        {s.title}
+                      </a>
+                    ) : (
+                      <span className="font-semibold">{s.title}</span>
+                    )}
+                    {s.author ? <span className="text-muted">, {s.author}</span> : null}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          ) : null}
 
           {post.faq?.length ? (
             <div className="mt-14">
@@ -213,10 +220,12 @@ export default async function PostPage({ params }: Props) {
                       href={`/blog/${p.slug}`}
                       className="block h-full rounded-2xl border border-cream-deep bg-white p-6 transition-colors hover:border-brand/40"
                     >
-                      <p className="text-xs font-bold tracking-[0.14em] text-brand-ink uppercase">
-                        {p.category}
-                      </p>
-                      <p className="mt-2 font-bold text-balance">{p.title}</p>
+                      {p.category && (
+                        <p className="mb-2 text-xs font-bold tracking-[0.14em] text-brand-ink uppercase">
+                          {p.category}
+                        </p>
+                      )}
+                      <p className="font-bold text-balance">{p.title}</p>
                     </Link>
                   </li>
                 ))}
@@ -225,6 +234,8 @@ export default async function PostPage({ params }: Props) {
           )}
         </div>
       </Section>
+
+      {headings.length >= 2 && <PostToc headings={headings} articleId="post-body" />}
 
       <script
         type="application/ld+json"

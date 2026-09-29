@@ -4,6 +4,7 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { PageviewTracker } from "@/components/PageviewTracker";
 import { COUNTY_ORDER, areas } from "@/lib/areas";
+import { getNav } from "@/lib/nav";
 import { getSiteSettings } from "@/lib/settings";
 import { site } from "@/lib/site";
 
@@ -122,8 +123,13 @@ function withProfile(graph: typeof jsonLd, settings: { google_business_url: stri
   };
 }
 
+// The Blog link and the blog pages depend on today's date in Fort Wayne, so
+// every public page is rebuilt at least hourly and posts release without a deploy.
+export const revalidate = 3600;
+
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const settings = await getSiteSettings();
+  const navItems = getNav();
 
   return (
     <>
@@ -133,9 +139,9 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       >
         Skip to content
       </a>
-      <Header />
+      <Header nav={navItems} />
       <main id="main">{children}</main>
-      <Footer settings={settings} />
+      <Footer settings={settings} nav={navItems} />
       <CallBar />
       {/* Public pages only — the admin sits outside this layout, so Michelle's
           own clicks never count as visitors. */}

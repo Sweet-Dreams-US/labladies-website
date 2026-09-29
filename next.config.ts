@@ -18,6 +18,13 @@ const redirectHosts = ownedDomains
   .filter((host) => host !== canonicalHost);
 
 const nextConfig: NextConfig = {
+  // The blog reads markdown from content/blog at render time, not only at
+  // build, so the files must ship with every server function that renders a
+  // public page (the nav depends on whether a post is released).
+  outputFileTracingIncludes: {
+    "/**": ["./content/blog/**/*"],
+  },
+
   async redirects() {
     return redirectHosts.map((host) => ({
       // Everything except the cron endpoint. Vercel calls the cron on the

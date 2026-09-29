@@ -208,8 +208,13 @@ runtime and the build will not catch it.
 
 Added for the "keep us near the top for mobile phlebotomist" ask on the call.
 
-- Posts are typed data in `src/lib/blog.ts`, not a CMS — same as the rest of
-  the copy. Append an entry; `date` drives ordering and the sitemap.
+- Two sources feed one list. The original posts are typed data in
+  `src/lib/blog.ts`. New posts are markdown in `content/blog/YYYY-MM-DD-<slug>.md`
+  (format and release rules: `Sweet Dreams/BLOG-FORMAT.md`; parser in
+  `src/lib/blog-markdown.ts`). A post shows on and after `release_on` in
+  America/Indiana/Indianapolis time; before that it 404s and is left out of the
+  index, sitemap, llms.txt and nav. Pages revalidate hourly, so no deploy is
+  needed. The Blog nav link appears only once a post is released (`getNav()`).
 - Cadence is every other week. Posts exist to answer what people type before
   they call.
 - All the site content rules above apply to posts: say what we do and never

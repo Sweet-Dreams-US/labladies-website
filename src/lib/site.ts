@@ -38,6 +38,8 @@ export const site = {
   travelNote: "Travel fee may apply.",
 } as const;
 
+export type NavItem = { readonly href: string; readonly label: string };
+
 export const nav = [
   { href: "/", label: "Home" },
   { href: "/services", label: "Services" },

@@ -1,7 +1,8 @@
 import { areasByCounty } from "@/lib/areas";
-import { sortedPosts } from "@/lib/blog";
+import { getReleasedPosts } from "@/lib/blog";
+import { getNav } from "@/lib/nav";
 import { getSiteSettings } from "@/lib/settings";
-import { appointmentWindows, nav, services, site, whoWeServe } from "@/lib/site";
+import { appointmentWindows, services, site, whoWeServe } from "@/lib/site";
 
 /**
  * /llms.txt — a plain summary of the business for AI assistants.
@@ -73,13 +74,13 @@ Not an exhaustive list — call to check an address that isn't here.
 
 ## Pages
 
-${nav.map((n) => pageLine(n.href, n.label)).join("\n")}
+${getNav().map((n) => pageLine(n.href, n.label)).join("\n")}
 ${pageLine("/areas", "Service Areas")}
 ${pageLine("/privacy", "Privacy Policy")}
 
 ## Articles
 
-${sortedPosts.map((p) => `- [${p.title}](${site.url}/blog/${p.slug}): ${p.description}`).join("\n")}
+${getReleasedPosts().map((p) => `- [${p.title}](${site.url}/blog/${p.slug}): ${p.description}`).join("\n")}
 `;
 
   return new Response(body, {

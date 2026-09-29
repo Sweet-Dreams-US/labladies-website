@@ -1,44 +1,63 @@
+import "server-only";
+import { readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
+import { parseBody, parseFrontMatter, splitFrontMatter, withHeadingIds } from "./blog-markdown";
+import type { Block, Source } from "./blog-markdown";
 import { site } from "./site";
 
 /**
  * The blog.
  *
  * Michelle asked on the call to be found when someone searches "mobile
- * phlebotomist" — this is the half of that which isn't metadata. Posts go out
- * roughly every other week and exist to answer the questions people actually
- * type before they call, which is also what makes them worth reading.
+ * phlebotomist". This is the half of that which isn't metadata. Posts exist
+ * to answer the questions people actually type before they call, which is
+ * also what makes them worth reading.
  *
- * Posts are typed data rather than a CMS, matching the rest of the site: all
- * copy lives in source. To add one, append an entry — `date` drives ordering
- * and the sitemap, and the slug is the URL.
+ * Two sources feed one list:
+ *
+ * 1. `legacyPosts` below: the original posts, typed data in source. Their
+ *    URLs and look are unchanged.
+ * 2. `content/blog/YYYY-MM-DD-<slug>.md`: the markdown posts written by the
+ *    blog routine. The format and release rules are in BLOG-FORMAT.md.
+ *
+ * A post is visible on and after its release date in Fort Wayne time
+ * (America/Indiana/Indianapolis). Before that it does not exist as far as the
+ * pages, the sitemap and llms.txt are concerned. Pages revalidate at least
+ * hourly and compare the date at render time, so a post goes live without a
+ * deploy.
  *
  * House rules, same as everywhere else on this site: say what Lab Ladies
  * does, never what it doesn't; no children or pediatric copy; no claim about
  * a result or a diagnosis; no naming third-party laboratories as partners.
  */
 
-export type Block =
-  | { t: "p"; text: string }
-  | { t: "h2"; text: string }
-  | { t: "list"; items: string[] }
-  | { t: "quote"; text: string };
+export type { Block, Source };
 
 export type Post = {
   slug: string;
   title: string;
-  /** Meta description and the card blurb — keep under about 160 characters. */
+  /** Meta description and the card blurb. Keep under about 160 characters. */
   description: string;
-  /** ISO date. Drives ordering and <time>. */
+  /** ISO date the post goes live. Drives ordering and <time>. */
   date: string;
-  /** Shown above the title. One or two words. */
-  category: string;
+  /** Shown above the title. One or two words. Absent on markdown posts. */
+  category?: string;
   readMinutes: number;
   body: Block[];
   /** Rendered as an FAQPage schema block as well as on the page. */
   faq?: { q: string; a: string }[];
+  /** Markdown posts only. */
+  sources?: Source[];
+  /** Markdown posts only. A URL path served by the blog image route. */
+  cover?: string;
 };
 
-export const posts: Post[] = [
+type LegacyPost = Omit<Post, "body" | "category"> & {
+  category: string;
+  body: ({ t: "p"; text: string } | { t: "h2"; text: string } | { t: "list"; items: string[] } | { t: "quote"; text: string })[];
+};
+
+const legacyPosts: LegacyPost[] = [
   {
     slug: "what-is-a-mobile-phlebotomist",
     title: "What Is a Mobile Phlebotomist, and How Does a Home Blood Draw Work?",
@@ -50,7 +69,7 @@ export const posts: Post[] = [
     body: [
       {
         t: "p",
-        text: "A phlebotomist is the person who draws your blood. A mobile phlebotomist does the same job, except they come to you — your living room, your office, your apartment in a senior living community — instead of you sitting in a waiting room.",
+        text: "A phlebotomist is the person who draws your blood. A mobile phlebotomist does the same job, except they come to you: your living room, your office or your apartment in a senior living community, instead of you sitting in a waiting room.",
       },
       {
         t: "p",
@@ -65,7 +84,7 @@ export const posts: Post[] = [
         t: "list",
         items: [
           "We confirm who you are and what has been ordered, and check any fasting instructions.",
-          "You sit somewhere comfortable with an arm supported — your own chair is usually better than anything in a lab.",
+          "You sit somewhere comfortable with an arm supported. Your own chair is usually better than anything in a lab.",
           "The draw itself takes under a minute for most panels.",
           "Tubes are labelled in front of you, then packed for transport at the temperature the laboratory requires.",
           "We tell you what happens next and roughly when to expect to hear something.",
@@ -74,7 +93,7 @@ export const posts: Post[] = [
       { t: "h2", text: "Where the specimen goes afterwards" },
       {
         t: "p",
-        text: "This is the part people rarely think about, and it matters more than the draw. A specimen that sits too long, or travels at the wrong temperature, can be rejected by the laboratory — which means a second visit and a second needle.",
+        text: "This is the part people rarely think about, and it matters more than the draw. A specimen that sits too long, or travels at the wrong temperature, can be rejected by the laboratory, which means a second visit and a second needle.",
       },
       {
         t: "p",
@@ -83,7 +102,7 @@ export const posts: Post[] = [
       { t: "h2", text: "Do you need a doctor's order?" },
       {
         t: "p",
-        text: "Sometimes. Many tests are ordered by your physician or nurse practitioner, and we collect against that order and make sure the results get back to them. Others are available self-pay, which means you can request them yourself without an order from a doctor. If you are not sure which applies to what you want, call and ask — it is a short conversation.",
+        text: "Sometimes. Many tests are ordered by your physician or nurse practitioner, and we collect against that order and make sure the results get back to them. Others are available self-pay, which means you can request them yourself without an order from a doctor. If you are not sure which applies to what you want, call and ask. It is a short conversation.",
       },
     ],
     faq: [
@@ -97,7 +116,7 @@ export const posts: Post[] = [
       },
       {
         q: "Does Lab Ladies bill insurance?",
-        a: "No. Lab Ladies does not bill insurance for the mobile collection — that fee is paid directly to us. The laboratory that performs the testing handles its own billing separately.",
+        a: "No. Lab Ladies does not bill insurance for the mobile collection. That fee is paid directly to us. The laboratory that performs the testing handles its own billing separately.",
       },
     ],
   },
@@ -105,7 +124,7 @@ export const posts: Post[] = [
     slug: "home-blood-draw-palm-beach-broward",
     title: "Getting Blood Work Done at Home in Palm Beach and Broward County",
     description:
-      "How mobile lab collection works across Palm Beach and Broward County — service area, appointment windows, travel fees and what to have ready.",
+      "How mobile lab collection works across Palm Beach and Broward County: service area, appointment windows, travel fees and what to have ready.",
     date: "2026-09-08",
     category: "Local",
     readMinutes: 3,
@@ -116,7 +135,7 @@ export const posts: Post[] = [
       },
       {
         t: "p",
-        text: `Lab Ladies covers ${site.areas.slice(0, 2).join(" and ")} — homes, offices, senior living communities and rehab facilities.`,
+        text: `Lab Ladies covers ${site.areas.slice(0, 2).join(" and ")}, including homes, offices, senior living communities and rehab facilities.`,
       },
       { t: "h2", text: "Appointment windows" },
       {
@@ -131,7 +150,7 @@ export const posts: Post[] = [
           "A photo ID.",
           "Any fasting instructions you were given, and when you last ate.",
           "A list of medications, if the order mentions timing around a dose.",
-          "Water — being well hydrated genuinely makes a draw easier, unless you were told otherwise.",
+          "Water. Being well hydrated genuinely makes a draw easier, unless you were told otherwise.",
         ],
       },
       { t: "h2", text: "About the travel fee" },
@@ -175,7 +194,7 @@ export const posts: Post[] = [
           "Infections with more than one organism, where a culture may report only whichever grew fastest.",
           "Organisms that are slow-growing or difficult to culture at all.",
           "Samples taken after antibiotics have already started, when a culture may come back showing nothing.",
-          "Recurring symptoms with repeatedly negative cultures — a frustrating and common pattern.",
+          "Recurring symptoms with repeatedly negative cultures, a frustrating and common pattern.",
         ],
       },
       { t: "h2", text: "Why it comes up so often with older adults" },
@@ -190,7 +209,7 @@ export const posts: Post[] = [
       { t: "h2", text: "The collection problem, and what we do about it" },
       {
         t: "p",
-        text: "A clean-catch sample assumes someone can follow a multi-step process standing at a sink. For a patient with dementia, limited mobility, or incontinence, that assumption quietly fails — and the test simply does not get done.",
+        text: "A clean-catch sample assumes someone can follow a multi-step process standing at a sink. For a patient with dementia, limited mobility, or incontinence, that assumption quietly fails, and the test simply does not get done.",
       },
       {
         t: "p",
@@ -238,7 +257,7 @@ export const posts: Post[] = [
       {
         t: "list",
         items: [
-          "Veins that roll — they move aside under the needle instead of staying put.",
+          "Veins that roll: they move aside under the needle instead of staying put.",
           "Small or deep veins that cannot be felt easily from the surface.",
           "Fragile vein walls, which become more common with age and with some medications.",
           "Dehydration, which reduces blood volume and makes veins harder to find. This one is often fixable.",
@@ -258,7 +277,7 @@ export const posts: Post[] = [
       { t: "h2", text: "Say something first" },
       {
         t: "p",
-        text: "If previous draws have gone badly, lead with it. Tell us which arm has worked before, which site someone found last time, and whether you have a history of feeling faint. None of that is complaining — it is useful information, and it changes how the draw is approached.",
+        text: "If previous draws have gone badly, lead with it. Tell us which arm has worked before, which site someone found last time, and whether you have a history of feeling faint. None of that is complaining. It is useful information, and it changes how the draw is approached.",
       },
       {
         t: "p",
@@ -295,7 +314,7 @@ export const posts: Post[] = [
         items: [
           "Routine draws scheduled around the community's day rather than against it.",
           "On-call testing when something changes and nobody wants to wait until next week.",
-          "Respiratory testing — including COVID, flu and RSV collection — without moving a resident who may be contagious through a shared building.",
+          "Respiratory testing, including COVID, flu and RSV collection, without moving a resident who may be contagious through a shared building.",
           "Advanced PCR collection, including for residents who cannot provide a clean-catch specimen.",
         ],
       },
@@ -327,9 +346,84 @@ export const posts: Post[] = [
   },
 ];
 
-export const sortedPosts = [...posts].sort((a, b) => b.date.localeCompare(a.date));
+const CONTENT_DIR = join(process.cwd(), "content", "blog");
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-export const getPost = (slug: string) => posts.find((p) => p.slug === slug) ?? null;
+/** Today's date in Fort Wayne, as YYYY-MM-DD. */
+export function todayInFortWayne(now = new Date()) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Indiana/Indianapolis",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+}
+
+function loadMarkdownPosts(): Post[] {
+  let files: string[];
+  try {
+    files = readdirSync(CONTENT_DIR).filter((f) => f.endsWith(".md"));
+  } catch {
+    return [];
+  }
+
+  const out: Post[] = [];
+  for (const file of files.sort()) {
+    const parts = splitFrontMatter(readFileSync(join(CONTENT_DIR, file), "utf8"));
+    const fm = parts ? parseFrontMatter(parts.head) : null;
+    const slug = fm?.slug ?? "";
+    if (!parts || !fm || !fm.title || !SLUG.test(slug) || !fm.description) {
+      console.warn(`[blog] skipped ${file}: missing or invalid front matter`);
+      continue;
+    }
+    // An empty or malformed release_on means "not released yet", never "now".
+    const date = fm.release_on && ISO_DATE.test(fm.release_on) ? fm.release_on : "9999-12-31";
+
+    const body = parseBody(parts.body);
+    const words = parts.body.split(/\s+/).filter(Boolean).length;
+    const cover = fm.cover_image?.replace(/^\.?\/?images\//, "");
+    out.push({
+      slug,
+      title: fm.title,
+      description: fm.description,
+      date,
+      readMinutes: fm.reading_minutes ?? Math.max(1, Math.round(words / 200)),
+      body,
+      sources: fm.sources,
+      cover: cover && /^[\w.-]+\/[\w.-]+$/.test(cover) ? `/blog/images/${cover}` : undefined,
+    });
+  }
+  return out;
+}
+
+let cache: Post[] | null = null;
+
+/** Every post that exists in the repo, released or not. Internal: never render from this. */
+function allPosts(): Post[] {
+  if (cache && process.env.NODE_ENV === "production") return cache;
+  const legacy: Post[] = legacyPosts.map((p) => ({ ...p, body: withHeadingIds(p.body) }));
+  const taken = new Set(legacy.map((p) => p.slug));
+  cache = [...legacy, ...loadMarkdownPosts().filter((p) => !taken.has(p.slug))];
+  return cache;
+}
+
+/** Posts visible right now, newest first. */
+export function getReleasedPosts(now = new Date()): Post[] {
+  const today = todayInFortWayne(now);
+  return allPosts()
+    .filter((p) => p.date <= today)
+    .sort((a, b) => b.date.localeCompare(a.date));
+}
+
+/** A released post by slug. Null before its release date, so the page 404s. */
+export const getPost = (slug: string) => getReleasedPosts().find((p) => p.slug === slug) ?? null;
+
+export const hasReleasedPosts = () => getReleasedPosts().length > 0;
+
+/** The h2 headings of a post, in order: the table of contents. */
+export const getHeadings = (post: Post) =>
+  post.body.flatMap((b) => (b.t === "h2" ? [{ id: b.id, text: b.text }] : []));
 
 export const formatPostDate = (iso: string) =>
   new Date(`${iso}T12:00:00Z`).toLocaleDateString("en-US", {

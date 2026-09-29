@@ -1,7 +1,11 @@
 import type { MetadataRoute } from "next";
 import { areas } from "@/lib/areas";
-import { posts } from "@/lib/blog";
-import { nav, site, siteUpdated } from "@/lib/site";
+import { getReleasedPosts } from "@/lib/blog";
+import { getNav } from "@/lib/nav";
+import { site, siteUpdated } from "@/lib/site";
+
+// Unreleased posts stay out, and a post joins as soon as its date arrives.
+export const revalidate = 3600;
 
 /**
  * Sitemap for labladies.com.
@@ -12,8 +16,9 @@ import { nav, site, siteUpdated } from "@/lib/site";
  */
 export default function sitemap(): MetadataRoute.Sitemap {
   const pageDate = new Date(`${siteUpdated}T12:00:00Z`);
+  const posts = getReleasedPosts();
 
-  const pages: MetadataRoute.Sitemap = nav.map((item) => ({
+  const pages: MetadataRoute.Sitemap = getNav().map((item) => ({
     url: `${site.url}${item.href === "/" ? "" : item.href}`,
     // A fixed content date, not the build time: stamping "today" on every page
     // at every deploy teaches Google the field means nothing.

@@ -5,9 +5,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { PhoneIcon } from "@/components/Icons";
-import { nav, site } from "@/lib/site";
+import { site } from "@/lib/site";
+import type { NavItem } from "@/lib/site";
 
-export function Header() {
+export function Header({ nav }: { nav: readonly NavItem[] }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
