@@ -3,9 +3,8 @@
 Everything below is what has to happen outside the code for the tracking board
 and the blog to be live.
 
-**Status:** live at **<https://www.labladies.net>** — the official domain for
-now. **labladies.com** is the intended long-term home but can't be pointed
-yet (see §3). The
+**Status:** live at **<https://www.labladies.com>** — the official domain
+since 29 Sep 2026. Every .net address redirects there. The
 Vercel project now lives in the **Sweet Dreams' projects** team (moved from
 Team Marcuccilli the same day) and deploys from GitHub on every push to `main`.
 
@@ -25,7 +24,7 @@ be prefixed `NEXT_PUBLIC_`.
 | `SUPABASE_URL` | `https://nxhwqtqroyerbbklywyn.supabase.co` | Shared FreeWebsites project |
 | `SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_cVzB-1BXi5iuK3PIjAHFrQ_Tk76Gvpn` | Reads nothing on its own |
 | `SUPABASE_ADMIN_TOKEN` | in `.env.local` | Unlocks only the `ll_` tables |
-| `NEXT_PUBLIC_SITE_URL` | `https://www.labladies.net` | The official domain — see §3 before changing |
+| `NEXT_PUBLIC_SITE_URL` | `https://www.labladies.com` | The official domain — see §3 before changing |
 | `ADMIN_EMAIL` | `labladies2026@gmail.com` | The email half of the sign-in |
 | `ADMIN_PASSCODE` | in `.env.local` | The password half |
 | `ALERT_EMAIL_TO` | `labladies2026@gmail.com` | Where overdue alerts go |
@@ -75,9 +74,9 @@ Built and tested on both forms — the callback form and the admin sign-in. It
 switches on the moment both keys are in Vercel; until then the forms work
 exactly as before.
 
-1. Cloudflare → Turnstile → the widget. **Hostnames:** `www.labladies.net`,
-   `labladies.net`, `labladies-website.vercel.app` (still a way into /admin),
-   and `labladies.com` for later. Mode: **Managed**.
+1. Cloudflare → Turnstile → the widget. **Hostnames:** `www.labladies.com`,
+   `labladies.com`, and `labladies-website.vercel.app` (still a way into
+   /admin). Mode: **Managed**.
 2. Vercel → Environment Variables, all environments:
    - `NEXT_PUBLIC_TURNSTILE_SITE_KEY` = the **Site key**
    - `TURNSTILE_SECRET_KEY` = the **Secret key**
@@ -96,71 +95,60 @@ keys are set, so a half-finished setup can't lock anyone out of the admin.
 
 ## 3. Domains
 
-**Today: `https://www.labladies.net` is the official address.** Every other
-owned domain redirects to it. `labladies.com` will take over once it can be
-pointed at Vercel.
+**`https://www.labladies.com` is the official address** (since 29 Sep 2026).
 
-The official address is one setting — **`NEXT_PUBLIC_SITE_URL`** in Vercel —
-not code. Canonical tags, the sitemap, social cards, structured data,
-`llms.txt` and the redirects all follow it. The list of owned domains is
-`ownedDomains` in `src/lib/site.ts`; whichever one `NEXT_PUBLIC_SITE_URL` names
-is served, and the rest (plus every `www.`) 308 to it.
+Set in Vercel as **`NEXT_PUBLIC_SITE_URL`** — canonical tags, the sitemap,
+social cards, structured data, `llms.txt` and the redirects all follow it.
 
 > **The one rule:** `NEXT_PUBLIC_SITE_URL` must be the domain Vercel marks
-> **Production** — never one Vercel itself redirects. Vercel currently sends
-> `labladies.net` → `www.labladies.net`, so the setting is
-> `https://www.labladies.net`. If it said `https://labladies.net`, Vercel and
-> the site would redirect visitors back and forth forever.
+> **Production** — never one Vercel itself redirects. Vercel sends
+> `labladies.com` → `www.labladies.com`, so the setting is
+> `https://www.labladies.com`. Naming the bare domain would make Vercel and
+> the site redirect visitors back and forth forever. Change one, change both,
+> then redeploy.
 
-### Switching to labladies.com, when it's possible
+**What's attached to the Vercel project today**
 
-It can't be pointed today: its nameservers are `ns5/ns6.afternic.com` —
-GoDaddy's lease/marketplace service — so its DNS isn't editable like the
-others. That's tied to the lease. Once GoDaddy lets you manage its DNS:
+| Domain | Does |
+|---|---|
+| `www.labladies.com` | **Production** — serves the site |
+| `labladies.com` | 308 → www.labladies.com |
+| `labladies.net`, `www.labladies.net` | 308 → www.labladies.com |
+| `labladies-website.vercel.app` | Serves the site, noindexed |
 
-1. At GoDaddy, point `labladies.com` at Vercel (the records Vercel shows).
-2. In Vercel → Domains, add `labladies.com` as **Production** and
-   `www.labladies.com` → redirect to it. Wait for *Valid Configuration*.
-3. **Check <https://labladies.com> shows the site.** Not before — pointing the
-   site at .com while it's still parked sends every visitor to a blank page.
-   That happened for a short while on 25 Sep.
-4. Set `NEXT_PUBLIC_SITE_URL` = `https://labladies.com` (all environments).
-5. Redeploy. The .net domains now 308 to .com, which carries the ranking over.
-6. In Search Console, add a Domain property for labladies.com as well.
+**The other domains** (`lab-ladies.com`, `.org`, `.info`, `.xyz`, `.store`,
+`.shop`…) aren't attached. Either works for each:
+- GoDaddy Forwarding → `https://www.labladies.com` (what `lab-ladies.net` does), or
+- point its DNS at Vercel and add it to the project, *Redirect to*
+  `www.labladies.com`. If the redirect setting is forgotten, the code
+  redirects it anyway — as long as it's in `ownedDomains` in `src/lib/site.ts`.
 
-### Adding the other domains
-
-Each one either points its DNS at Vercel and is added in Vercel with
-*Redirect to* `www.labladies.net`, or uses GoDaddy's own Forwarding (as
-`lab-ladies.net` does) to `https://www.labladies.net`. Both work. Pointing at
-Vercel is slightly better — one hop instead of two — and the code redirects
-any owned domain that reaches Vercel even if its "Redirect to" isn't set.
+**Removing a domain from the project doesn't stop its DNS pointing at
+Vercel** — visitors then get a Vercel "deployment not found" 404. Remove the
+DNS record too, or keep the domain attached as a redirect. That's what took
+.net down for a few days in late September.
 
 > **Don't touch the email records on labladies.net.** Its DNS carries a live
-> Microsoft 365 setup with Proofpoint filtering — the `MX`, `autodiscover`,
-> `lyncdiscover`, `sip`, `msoid` and `_sip…` records and the SPF / DMARC /
-> `onmicrosoft.com` TXT records. Only the `A @` and `CNAME www` records are
-> the website. Leave the nameservers at GoDaddy too; moving them to Vercel
-> would drop those records unless every one is recreated first.
+> Microsoft 365 setup with Proofpoint filtering — `MX`, `autodiscover`,
+> `lyncdiscover`, `sip`, `msoid`, the `_sip…` SRVs and the SPF / DMARC /
+> `onmicrosoft.com` TXT records. The Resend records (`send`, `rsend`,
+> `resend._domainkey`) are the notification email. Leave the nameservers at
+> GoDaddy.
 
-Any host that isn't the official one also gets `X-Robots-Tag: noindex` —
-mainly `labladies-website.vercel.app`, which keeps working (preview deploys,
-and a way into /admin) without competing in Google.
-
-**After any domain switch, Michelle signs into /admin again** on the new
-address — the login cookie belongs to the address she signed in on.
+**Michelle signs into /admin again** at `www.labladies.com/admin` — the login
+cookie belongs to the address she signed in on.
 
 ## 4. Google Search Console and Bing
 
-Do this now, for **labladies.net**.
+Do this now, for **labladies.com**.
 
 **Google — use a Domain property, verified by DNS.** Search Console → Add
-property → *Domain* → `labladies.net`. It gives a `TXT` record; add it at
+property → *Domain* → `labladies.com`. It gives a `TXT` record; add it at
 GoDaddy, alongside the existing records. A Domain property covers `www.` and every other variant
 at once and needs no code. Then:
 
 1. Sitemaps → submit `sitemap.xml`.
-2. URL Inspection → `https://www.labladies.net` → Request indexing.
+2. URL Inspection → `https://www.labladies.com` → Request indexing.
 
 Only if DNS verification isn't possible: use a URL-prefix property with the
 *HTML tag* method, put the token (the `content="…"` value only) in Vercel as

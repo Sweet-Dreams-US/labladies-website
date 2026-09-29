@@ -14,12 +14,14 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 (co-owner, Laboratory Supervisor). Nurse-owned concierge mobile laboratory service.
 
 **Live URLs**
-- **Official domain: https://www.labladies.net** — for now. It is whatever
-  `NEXT_PUBLIC_SITE_URL` says (fallback in `site.ts`), and **must be the host
-  Vercel marks Production**, never one Vercel redirects, or the two loop.
-  labladies.com is the long-term home but is a *leased* domain still on
-  Afternic's nameservers; do not point the site at it until it resolves to
-  Vercel. See HANDOFF.md §3.
+- **Official domain: https://www.labladies.com** (since 29 Sep 2026). It is
+  whatever `NEXT_PUBLIC_SITE_URL` says (fallback in `site.ts`), and **must be
+  the host Vercel marks Production** — `www.`, because Vercel redirects the
+  bare domain to it. Naming a host Vercel redirects makes the two loop.
+  labladies.com is a *leased* GoDaddy domain; see HANDOFF.md.
+- labladies.net and www.labladies.net are attached to the project as 308s to
+  www.labladies.com. Detaching a domain whose DNS still points at Vercel
+  gives visitors a DEPLOYMENT_NOT_FOUND 404 — that's what broke .net.
 - Every owned domain is in `ownedDomains` in `src/lib/site.ts`;
   `next.config.ts` 308s all of them and their `www.` to the official one.
 - labladies.net's DNS carries a live Microsoft 365 / Proofpoint email setup.
@@ -245,8 +247,7 @@ no SEO library.
 
 # Still outstanding
 
-- **labladies.com** → switch to it once the lease allows DNS changes. See `HANDOFF.md` §3.
-- **Search Console / Bing Webmaster** — for labladies.net, now.
+- **Search Console / Bing Webmaster** — for labladies.com, now.
 - **Turnstile keys** — built and tested; waiting on the site + secret key.
 - **Google Business Profile** does not exist yet; `site.googleReviewUrl` is
   still a search-URL placeholder.
