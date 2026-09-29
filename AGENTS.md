@@ -248,7 +248,6 @@ no SEO library.
 # Still outstanding
 
 - **Search Console / Bing Webmaster** — for labladies.com, now.
-- **Turnstile keys** — built and tested; waiting on the site + secret key.
 - **Google Business Profile** does not exist yet; `site.googleReviewUrl` is
   still a search-URL placeholder.
 - **Pricing** rows are all `null` ("Call for pricing") pending Michelle's rates.

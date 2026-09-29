@@ -31,8 +31,8 @@ be prefixed `NEXT_PUBLIC_`.
 | `ALERT_FROM` | `Lab Ladies <notifications@labladies.net>` | labladies.net is verified in Resend |
 | `RESEND_API_KEY` | set 25 Sep 2026 | **Sending-only key, scoped to labladies.net.** It cannot send as any other client's domain — never swap in an account-wide key |
 | `CRON_SECRET` | set | Vercel signs the nightly cron with it |
-| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | **waiting on Cole** | Cloudflare Turnstile — see §2b |
-| `TURNSTILE_SECRET_KEY` | **waiting on Cole** | Cloudflare Turnstile — see §2b |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY` | set 29 Sep 2026 | Cloudflare Turnstile — see §2b |
+| `TURNSTILE_SECRET_KEY` | set 29 Sep 2026 | Cloudflare Turnstile — see §2b |
 
 The live values for `SUPABASE_ADMIN_TOKEN` and `ADMIN_PASSCODE` are in
 `.env.local`, which is gitignored. Give Michelle the password directly — by
@@ -68,11 +68,15 @@ chat it should be rotated in Resend.
 Testing locally never emails Michelle: `.env.local` sends to
 `delivered@resend.dev`, Resend's sandbox inbox.
 
-## 2b. Bot protection (Cloudflare Turnstile) — waiting on the keys
+## 2b. Bot protection (Cloudflare Turnstile) — ON (29 Sep 2026)
 
-Built and tested on both forms — the callback form and the admin sign-in. It
-switches on the moment both keys are in Vercel; until then the forms work
-exactly as before.
+Live on both public-facing forms — the callback form and the admin sign-in.
+The forms *inside* the admin don't need it: every save there already requires
+a signed-in session, and the sign-in is what Turnstile guards.
+
+**If anyone ever reports they can't sign in or send the form**, the fastest
+way back is to remove `TURNSTILE_SECRET_KEY` from Vercel and redeploy —
+enforcement switches off and everything works as it did before Turnstile.
 
 1. Cloudflare → Turnstile → the widget. **Hostnames:** `www.labladies.com`,
    `labladies.com`, and `labladies-website.vercel.app` (still a way into
