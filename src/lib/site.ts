@@ -25,10 +25,17 @@ export const site = {
   fax: "561-461-6207",
   email: "labladies2026@gmail.com",
   emailHref: "mailto:labladies2026@gmail.com",
-  areas: ["Palm Beach County", "Broward County", "South Florida"],
+  /**
+   * Service area, south to north. Fort Lauderdale and Miami are the core
+   * (Cole, 29 Sep 2026: "Fort Lauderdale and Miami and beyond"); Palm Beach
+   * is where the business started. Every "where we work" sentence on the site
+   * reads `areaShort` / `areaLong` rather than restating the counties, so the
+   * next change is one edit.
+   */
+  areas: ["Miami-Dade County", "Broward County", "Palm Beach County"],
+  areaShort: "Miami-Dade, Broward & Palm Beach",
+  areaLong: "Miami-Dade, Broward and Palm Beach County",
   travelNote: "Travel fee may apply.",
-  /** Replace with the live Google Business Profile review link when available. */
-  googleReviewUrl: "https://www.google.com/search?q=Lab+Ladies+LLC+mobile+lab+South+Florida",
 } as const;
 
 export const nav = [
@@ -214,7 +221,7 @@ export const pricing = {
     },
     {
       title: "Travel Fee",
-      body: "A travel fee may apply depending on your location within Palm Beach and Broward County. We will always confirm any travel fee with you before your appointment — no surprises.",
+      body: "A travel fee may apply depending on where you are in Miami-Dade, Broward or Palm Beach County. We will always confirm any travel fee with you before your appointment — no surprises.",
     },
   ],
   /** Set `price` to a string (e.g. "$75") once the client confirms rates. */

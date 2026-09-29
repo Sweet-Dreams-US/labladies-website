@@ -11,7 +11,9 @@ const links = [
   { href: "/admin/practices", label: "Practices" },
   { href: "/admin/labs", label: "Labs" },
   { href: "/admin/team", label: "Team" },
+  { href: "/admin/analytics", label: "Visits" },
   { href: "/admin/activity", label: "Activity" },
+  { href: "/admin/settings", label: "Settings" },
 ];
 
 export default function AdminNav() {

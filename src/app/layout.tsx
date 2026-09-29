@@ -23,18 +23,21 @@ const bingVerification = process.env.BING_SITE_VERIFICATION;
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: "Lab Ladies | Mobile Lab Services in Palm Beach & Broward",
+    default: "Lab Ladies | Mobile Lab Services in South Florida",
     template: "%s | Lab Ladies",
   },
   description:
-    "Nurse-owned concierge mobile laboratory services in Palm Beach and Broward County. Blood draws, PCR testing and lab collection at your home or facility. Call 954-605-3725.",
+    "Nurse-owned mobile lab services in Fort Lauderdale, Miami, Boca Raton and across South Florida. Blood draws and PCR testing at home. Call 954-605-3725.",
   applicationName: site.shortName,
   keywords: [
     "mobile lab services",
     "mobile phlebotomist",
     "mobile phlebotomy South Florida",
-    "mobile blood draw Palm Beach",
+    "mobile phlebotomist Fort Lauderdale",
+    "mobile phlebotomist Miami",
     "mobile blood draw Broward County",
+    "mobile blood draw Miami-Dade",
+    "mobile blood draw Palm Beach",
     "home blood draw Boca Raton",
     "PCR testing at home",
     "urine PCR testing",
@@ -56,7 +59,7 @@ export const metadata: Metadata = {
     siteName: site.name,
     title: "Lab Ladies | Mobile Lab Services — We Come to You",
     description:
-      "Nurse-owned concierge mobile laboratory services across Palm Beach and Broward County. Call or text 954-605-3725.",
+      "Nurse-owned mobile lab services across Miami-Dade, Broward and Palm Beach County. Call or text 954-605-3725.",
     // The image itself comes from app/opengraph-image.png, which Next wires in
     // with the right size and type attributes automatically.
   },
@@ -64,7 +67,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Lab Ladies | Mobile Lab Services — We Come to You",
     description:
-      "Nurse-owned concierge mobile laboratory services across Palm Beach and Broward County.",
+      "Nurse-owned mobile lab services across Miami-Dade, Broward and Palm Beach County.",
   },
   robots: {
     index: true,

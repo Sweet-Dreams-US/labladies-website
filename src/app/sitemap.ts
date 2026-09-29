@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { areas } from "@/lib/areas";
 import { posts } from "@/lib/blog";
 import { nav, site, siteUpdated } from "@/lib/site";
 
@@ -31,5 +32,19 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
   }));
 
-  return [...pages, ...articles];
+  const areaPages: MetadataRoute.Sitemap = [
+    { url: `${site.url}/areas`, lastModified: pageDate, changeFrequency: "monthly", priority: 0.8 },
+    ...areas.map((a) => ({
+      url: `${site.url}/areas/${a.slug}`,
+      lastModified: pageDate,
+      changeFrequency: "monthly" as const,
+      priority: 0.7,
+    })),
+  ];
+
+  const legal: MetadataRoute.Sitemap = [
+    { url: `${site.url}/privacy`, lastModified: pageDate, changeFrequency: "yearly", priority: 0.2 },
+  ];
+
+  return [...pages, ...areaPages, ...articles, ...legal];
 }

@@ -277,7 +277,11 @@ export function InquiryForm() {
       </button>
 
       <p className="mt-4 text-sm text-muted">
-        Prefer to talk now?{" "}
+        We only use these details to call you back —{" "}
+        <a href="/privacy" className="underline">
+          privacy policy
+        </a>
+        . Prefer to talk now?{" "}
         <a href={site.phoneHref} className="font-bold text-brand-ink underline">
           Call {site.phone}
         </a>

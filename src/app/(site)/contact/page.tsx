@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { ClockIcon, MailIcon, PhoneIcon, PinIcon, StarIcon } from "@/components/Icons";
 import {
-  Button,
   CallButton,
   Card,
   CheckList,
@@ -11,17 +10,22 @@ import {
   Section,
   TextButton,
 } from "@/components/ui";
+import { GoogleLinks, hasGoogleLinks } from "@/components/GoogleLinks";
 import { InquiryForm } from "@/components/InquiryForm";
+import { getSiteSettings } from "@/lib/settings";
 import { appointmentWindows, site } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Book a Mobile Blood Draw — Call or Text",
   description:
-    "Call or text 954-605-3725 to book mobile lab collection anywhere in Palm Beach or Broward County, or request a callback online.",
+    "Call or text 954-605-3725 to book mobile lab collection in Miami-Dade, Broward or Palm Beach County, or request a callback online.",
   alternates: { canonical: "/contact" },
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const settings = await getSiteSettings();
+  const showGoogle = hasGoogleLinks(settings);
+
   return (
     <>
       <section className="bg-gradient-to-b from-brand-deep to-brand px-5 py-14 text-white sm:px-8 md:py-20">
@@ -96,11 +100,11 @@ export default function ContactPage() {
             <h2 className="mt-4 text-xl font-extrabold">Service Area</h2>
             <p className="mt-3 font-bold text-brand-ink">South Florida</p>
             <p className="mt-2 text-muted">
-              Palm Beach County and Broward County. {site.travelNote}
+              {site.areaLong}. {site.travelNote}
             </p>
           </Card>
 
-          <Card className="md:col-span-2">
+          <Card className={showGoogle ? "md:col-span-2" : "md:col-span-2 lg:col-span-3"}>
             <ClockIcon className="h-10 w-10 text-brand" />
             <h2 className="mt-4 text-xl font-extrabold">Flexible Appointments</h2>
             <p className="mt-2 text-muted">
@@ -109,6 +113,7 @@ export default function ContactPage() {
             <CheckList items={appointmentWindows} columns={2} className="mt-6" />
           </Card>
 
+          {showGoogle && (
           <Card className="bg-cream">
             <div className="flex gap-1 text-brand">
               {Array.from({ length: 5 }, (_, i) => (
@@ -119,10 +124,15 @@ export default function ContactPage() {
             <p className="mt-2 text-muted">
               A quick review helps other South Florida families find us.
             </p>
-            <Button href={site.googleReviewUrl} className="mt-6 w-full">
-              Review Us on Google
-            </Button>
+            <GoogleLinks
+              settings={settings}
+              reviewLabel="Review Us on Google"
+              profileLabel="Find Us on Google"
+              className="mt-6"
+              fullWidth
+            />
           </Card>
+          )}
         </div>
       </Section>
 

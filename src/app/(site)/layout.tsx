@@ -1,6 +1,10 @@
+import { Analytics } from "@vercel/analytics/next";
 import { CallBar } from "@/components/CallBar";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { PageviewTracker } from "@/components/PageviewTracker";
+import { COUNTY_ORDER, areas } from "@/lib/areas";
+import { getSiteSettings } from "@/lib/settings";
 import { site } from "@/lib/site";
 
 /**
@@ -50,9 +54,11 @@ const jsonLd = {
       priceRange: "$$",
       currenciesAccepted: "USD",
       paymentAccepted: "Cash, Check, Credit Card",
+      // The three counties, then every town with its own page — built from
+      // lib/areas.ts, so a town added there is listed here too.
       areaServed: [
-        { "@type": "AdministrativeArea", name: "Palm Beach County, Florida" },
-        { "@type": "AdministrativeArea", name: "Broward County, Florida" },
+        ...COUNTY_ORDER.map((c) => ({ "@type": "AdministrativeArea", name: `${c} County, Florida` })),
+        ...areas.map((a) => ({ "@type": "City", name: `${a.name}, Florida`, url: `${site.url}/areas/${a.slug}` })),
       ],
       address: { "@type": "PostalAddress", addressRegion: "FL", addressCountry: "US" },
       medicalSpecialty: "Pathology",
@@ -98,7 +104,27 @@ const jsonLd = {
   ],
 };
 
-export default function SiteLayout({ children }: { children: React.ReactNode }) {
+/**
+ * Adds the Google Business Profile, once Michelle has saved it, as the
+ * business's `sameAs` and `hasMap`. That's the link that tells Google this
+ * website and that Maps listing are the same business — which is what lets
+ * the two rank together.
+ */
+function withProfile(graph: typeof jsonLd, settings: { google_business_url: string | null }) {
+  if (!settings.google_business_url) return graph;
+  const [business, ...rest] = graph["@graph"];
+  return {
+    ...graph,
+    "@graph": [
+      { ...business, sameAs: [settings.google_business_url], hasMap: settings.google_business_url },
+      ...rest,
+    ],
+  };
+}
+
+export default async function SiteLayout({ children }: { children: React.ReactNode }) {
+  const settings = await getSiteSettings();
+
   return (
     <>
       <a
@@ -109,11 +135,15 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
       </a>
       <Header />
       <main id="main">{children}</main>
-      <Footer />
+      <Footer settings={settings} />
       <CallBar />
+      {/* Public pages only — the admin sits outside this layout, so Michelle's
+          own clicks never count as visitors. */}
+      <PageviewTracker />
+      <Analytics />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(withProfile(jsonLd, settings)) }}
       />
     </>
   );

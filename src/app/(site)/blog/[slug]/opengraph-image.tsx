@@ -13,7 +13,7 @@ import { site } from "@/lib/site";
  * for every post, so there's no runtime cost.
  */
 
-export const alt = "Lab Ladies — mobile lab services in Palm Beach and Broward County";
+export const alt = "Lab Ladies — mobile lab services across South Florida";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -88,7 +88,7 @@ export default async function Image({ params }: { params: Promise<{ slug: string
                 {site.shortName}
               </div>
               <div style={{ display: "flex", fontSize: 26, color: "#de0f0d" }}>
-                {site.phone} · Palm Beach & Broward
+                {site.phone} · South Florida
               </div>
             </div>
           </div>

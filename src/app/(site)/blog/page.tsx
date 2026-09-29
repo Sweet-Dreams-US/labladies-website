@@ -7,7 +7,7 @@ import { site } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Mobile Lab & Phlebotomy Blog",
   description:
-    "Plain answers about mobile blood draws, PCR testing and lab work at home in Palm Beach and Broward County, from the nurse-owned team at Lab Ladies.",
+    "Plain answers about mobile blood draws, PCR testing and lab work at home across South Florida, from the nurse-owned team at Lab Ladies.",
   alternates: { canonical: "/blog" },
 };
 

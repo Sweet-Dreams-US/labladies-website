@@ -142,6 +142,14 @@ DNS record too, or keep the domain attached as a redirect. That's what took
 **Michelle signs into /admin again** at `www.labladies.com/admin` — the login
 cookie belongs to the address she signed in on.
 
+## 3b. Things Michelle controls from the admin
+
+- **Settings → Review link / Business Profile link.** Paste from her Google
+  Business Profile; saving publishes to the site immediately. Until a link is
+  saved, its button simply isn't shown. Only Google links are accepted.
+- **Visits** — visitors, page views, where they came from, and how many became
+  callback requests. Counting starts on the live domain.
+
 ## 4. Google Search Console and Bing
 
 Do this now, for **labladies.com**.

@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { GoogleLinks, hasGoogleLinks } from "@/components/GoogleLinks";
+import { getSiteSettings } from "@/lib/settings";
 import Image from "next/image";
 import {
   BoltIcon,
@@ -10,7 +12,6 @@ import {
   StarIcon,
 } from "@/components/Icons";
 import {
-  Button,
   CallButton,
   Card,
   CheckList,
@@ -39,7 +40,7 @@ export const metadata: Metadata = {
   // Leads with "mobile phlebotomist" — the phrase Michelle asked to rank for —
   // and stays under ~60 characters so Google shows it whole. `absolute` skips
   // the layout's "%s | Lab Ladies" template, which would double the brand.
-  title: { absolute: "Mobile Phlebotomist in Palm Beach & Broward | Lab Ladies" },
+  title: { absolute: "Mobile Phlebotomist in South Florida | Lab Ladies" },
   alternates: { canonical: "/" },
 };
 
@@ -49,7 +50,9 @@ const trustChips = [
   { icon: ShieldIcon, title: "Trusted Care", note: "Nurse-owned and operated" },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const settings = await getSiteSettings();
+
   return (
     <>
       {/* Hero */}
@@ -62,7 +65,7 @@ export default function HomePage() {
           <div>
             <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-bold tracking-wide uppercase">
               <PinIcon className="h-4 w-4" />
-              Palm Beach &amp; Broward County
+              Miami-Dade, Broward &amp; Palm Beach
             </p>
             <Heading as="h1">
               Mobile Lab Services.
@@ -229,7 +232,8 @@ export default function HomePage() {
         </div>
       </Section>
 
-      {/* Reviews */}
+      {/* Reviews — only once Michelle has added a Google link in the admin. */}
+      {hasGoogleLinks(settings) && (
       <div className="bg-cream">
         <Section>
           <div className="flex flex-col items-center text-center">
@@ -243,21 +247,18 @@ export default function HomePage() {
               Reviews help other families in South Florida find compassionate, nurse-led lab care.
               We&rsquo;d be grateful if you shared your experience.
             </Lead>
-            <div className="mt-8">
-              <Button href={site.googleReviewUrl} variant="primary">
-                Leave a Google Review
-              </Button>
-            </div>
+            <GoogleLinks settings={settings} className="mt-8" />
           </div>
         </Section>
       </div>
+      )}
 
       {/* Final CTA */}
       <section className="bg-brand-deep px-5 py-16 text-white sm:px-8 md:py-20">
         <div className="mx-auto w-full max-w-3xl text-center">
           <Heading>Ready to schedule your mobile lab visit?</Heading>
           <p className="mt-4 text-lg text-white/90">
-            Call or text us today — we serve Palm Beach and Broward County.
+            Call or text us today — we serve Miami-Dade, Broward and Palm Beach County.
           </p>
           <p className="mt-6 text-4xl font-extrabold sm:text-5xl">
             <a href={site.phoneHref}>{site.phone}</a>

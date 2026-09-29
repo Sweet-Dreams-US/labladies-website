@@ -16,7 +16,7 @@ import { pricing, site } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Mobile Blood Draw Pricing — Self-Pay",
   description:
-    "Self-pay mobile lab collection in Palm Beach and Broward County. No physician order needed for self-pay tests. Call 954-605-3725 for current rates.",
+    "Self-pay mobile lab collection across South Florida. No physician order needed for self-pay tests. Call 954-605-3725 for current rates.",
   alternates: { canonical: "/pricing" },
 };
 

@@ -109,7 +109,7 @@ export default function AboutPage() {
         <div className="rounded-3xl bg-ink px-7 py-12 text-center text-white sm:px-12">
           <Heading>&ldquo;We come to you.&rdquo;</Heading>
           <Lead className="mx-auto mt-4 text-center text-white/80">
-            Serving Palm Beach and Broward County with early morning, evening and weekend
+            Serving Miami-Dade, Broward and Palm Beach County with early morning, evening and weekend
             availability. {site.travelNote}
           </Lead>
           <div className="mt-8 flex justify-center">

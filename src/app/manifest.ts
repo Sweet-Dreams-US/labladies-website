@@ -14,7 +14,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: `${site.shortName} — Mobile Lab Services`,
     short_name: site.shortName,
     description:
-      "Nurse-owned concierge mobile laboratory services in Palm Beach and Broward County.",
+      "Nurse-owned concierge mobile laboratory services across Miami-Dade, Broward and Palm Beach County.",
     start_url: "/",
     scope: "/",
     display: "browser",

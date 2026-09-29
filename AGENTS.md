@@ -33,7 +33,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 **NAP — never change without client sign-off**
 - Phone / text: 954-605-3725 · Fax: 561-461-6207 · Email: labladies2026@gmail.com
-- Service area: Palm Beach County & Broward County, South Florida
+- Service area: **Miami-Dade, Broward & Palm Beach County** (Miami-Dade added 29 Sep 2026 —
+  Cole: "Fort Lauderdale and Miami and beyond"). Read `site.areaShort` / `site.areaLong`;
+  never restate the counties in copy.
 
 **Brand**
 - Reds sampled from the client rack card: `#DE0F0D` (brand), `#9D0201` (brand-deep),
@@ -53,8 +55,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   performing laboratory's collection protocols") — the client's own note flags this.
 - No AI-generated people or hands anywhere. The site is currently photo-free by design;
   if the client sends real photos, drop them in `public/` and add them as brand slots.
-- `site.googleReviewUrl` in `src/lib/site.ts` is a search-URL placeholder — swap for the
-  real Google Business Profile review link once the profile exists.
+- **Google review and Business Profile links are set by Michelle in /admin/settings**
+  (`ll_site_settings`), not in code. Their buttons render only when a link is saved —
+  never a placeholder. The database rejects any non-Google URL.
+- The footer's physician-order line must agree with the pricing page: many tests are
+  self-pay with no order needed; others are collected on a physician's order.
 - **Owners are named by first name + last initial only** (Michelle G., Sandra S.). Do not
   publish their surnames anywhere on the site.
 - **Say what we do, never what we don't.** No "we don't treat X" phrasing anywhere. In
@@ -245,11 +250,38 @@ no SEO library.
 - **`siteUpdated`** in `site.ts` is what the sitemap reports for the static
   pages. Bump it when page copy changes. Don't swap it for `new Date()`.
 
+# Admin → live site
+
+Anything in /admin that changes the public site publishes on save — no redeploy.
+The pattern (see `src/lib/settings.ts` + `api/admin/settings`): the public read is
+a `fetch` tagged with a cache tag, and the admin route calls
+`revalidateTag(tag, { expire: 0 })` plus `revalidatePath("/", "layout")`. Use
+`{ expire: 0 }`, not `"max"` — "max" serves one stale visit first, and Michelle
+checks straight after saving. `updateTag` only works in Server Actions, not route
+handlers. Proven in a production build on 29 Sep: saved → live on the next load.
+
+# Service-area pages (`/areas`)
+
+42 towns in `src/lib/areas.ts`. Each has its own intro written about that town —
+that's what keeps them from being Google "doorway pages". Geography only: never
+invent facilities, patient counts or who's been visited. Adding a town updates
+the hub, sitemap, llms.txt and structured data automatically.
+
+# Analytics
+
+Two systems on purpose. **Vercel Web Analytics** (`<Analytics />`, enabled on the
+project) is for Cole in the Vercel dashboard. **The admin's Visits page** uses a
+first-party counter (`ll_pageviews`, `/api/v`, `PageviewTracker`) because showing
+Vercel's numbers in the admin would need a Vercel token, and those can't be scoped
+to one project. The counter stores no IP and no cookie; `visitor` is an HMAC of
+day+IP+UA, so it rotates daily. It only counts on the official host — preview,
+vercel.app and localhost never pollute the numbers. The privacy policy describes
+exactly this; change one, change the other.
+
 # Still outstanding
 
 - **Search Console / Bing Webmaster** — for labladies.com, now.
-- **Google Business Profile** does not exist yet; `site.googleReviewUrl` is
-  still a search-URL placeholder.
+- **Google Business Profile** — once it exists, Michelle pastes its links into /admin/settings.
 - **Pricing** rows are all `null` ("Call for pricing") pending Michelle's rates.
 - Dr. Lubin, Dr. Vega and Dr. Guia were seeded from her sheet but were not on
   her list of seven practices — practice affiliation needs confirming.
