@@ -26,7 +26,17 @@ const nextConfig: NextConfig = {
   },
 
   async redirects() {
-    return redirectHosts.map((host) => ({
+    // Posts that were written into the site code and taken off the blog on
+    // 2026-09-30. Their text is kept in the client's blog folder under extra/.
+    const removedPosts = [
+      "difficult-blood-draws",
+      "home-blood-draw-palm-beach-broward",
+      "lab-work-in-senior-living-communities",
+      "urine-pcr-testing-explained",
+      "what-is-a-mobile-phlebotomist",
+    ].map((slug) => ({ source: `/blog/${slug}`, destination: "/blog", permanent: true }));
+
+    return [...removedPosts, ...redirectHosts.map((host) => ({
       // Everything except the cron endpoint. Vercel calls the cron on the
       // production domain and does not follow redirects; if the primary
       // domain were ever set to an alias, a 308 here would silently stop the
@@ -38,7 +48,7 @@ const nextConfig: NextConfig = {
       // the request method, so a form POST that lands on an alias isn't
       // quietly turned into a GET.
       permanent: true,
-    }));
+    }))];
   },
 
   async headers() {

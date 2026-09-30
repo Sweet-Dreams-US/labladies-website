@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { ArrowIcon } from "@/components/Icons";
+import { Button } from "@/components/ui";
 import type { Block } from "@/lib/blog-markdown";
 
 const linkClass =
@@ -73,8 +75,51 @@ export function Inline({ text }: { text: string }) {
   return <>{out}</>;
 }
 
+const LINK = /\[([^\]]+)\]\(([^)\s]+)\)/g;
+const isSafeHref = (href: string) =>
+  (href.startsWith("/") && !href.startsWith("//")) || /^(https?:\/\/|mailto:|tel:|sms:)/i.test(href);
+
+/**
+ * A tip's links leave the text and become buttons under it. Every link in the
+ * tip is taken, in order; the text keeps whatever was around them.
+ */
+function splitTipLinks(blocks: Block[]) {
+  const links: { label: string; href: string }[] = [];
+  const rest: Block[] = [];
+  for (const b of blocks) {
+    if (b.t !== "p") {
+      rest.push(b);
+      continue;
+    }
+    const text = b.text
+      .replace(LINK, (_, label: string, href: string) => {
+        if (isSafeHref(href)) links.push({ label, href });
+        return "";
+      })
+      .replace(/\s+/g, " ")
+      .trim();
+    if (text) rest.push({ t: "p", text });
+  }
+  return { rest, links };
+}
+
+function TipButton({ href, children }: { href: string; children: ReactNode }) {
+  const external = /^https?:\/\//i.test(href);
+  return (
+    <Button
+      href={href}
+      {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      className="w-full text-center sm:w-auto"
+    >
+      {children}
+      <ArrowIcon className="h-5 w-5 shrink-0" />
+    </Button>
+  );
+}
+
 function Callout({ block }: { block: Extract<Block, { t: "callout" }> }) {
   const tip = block.kind === "tip";
+  const { rest, links } = tip ? splitTipLinks(block.blocks) : { rest: block.blocks, links: [] };
   return (
     <aside
       className={`rounded-3xl border-l-8 p-6 sm:p-7 ${
@@ -94,8 +139,17 @@ function Callout({ block }: { block: Extract<Block, { t: "callout" }> }) {
         {block.title}
       </p>
       <div className="mt-3 space-y-4">
-        <Blocks blocks={block.blocks} />
+        <Blocks blocks={rest} />
       </div>
+      {links.length > 0 && (
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          {links.map((l) => (
+            <TipButton key={l.href + l.label} href={l.href}>
+              {l.label}
+            </TipButton>
+          ))}
+        </div>
+      )}
     </aside>
   );
 }

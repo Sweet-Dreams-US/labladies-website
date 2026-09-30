@@ -129,7 +129,7 @@ export const revalidate = 3600;
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const settings = await getSiteSettings();
-  const navItems = getNav();
+  const navItems = getNav({ includeUnreleased: true });
 
   return (
     <>

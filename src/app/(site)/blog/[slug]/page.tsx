@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Accordion } from "@/components/Accordion";
 import { PostBody } from "@/components/PostBody";
 import { PostToc } from "@/components/PostToc";
 import { CallButton, Heading, Section, TextButton } from "@/components/ui";
-import { formatPostDate, getHeadings, getPost, getReleasedPosts } from "@/lib/blog";
+import { formatPostDate, getHeadings, getListedPosts, getPost } from "@/lib/blog";
 import { site } from "@/lib/site";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -16,7 +15,7 @@ type Props = { params: Promise<{ slug: string }> };
 export const revalidate = 3600;
 
 export function generateStaticParams() {
-  return getReleasedPosts().map((p) => ({ slug: p.slug }));
+  return getListedPosts().map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -28,14 +27,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: post.title,
     description: post.description,
     alternates: { canonical: `/blog/${post.slug}` },
+    ...(post.date ? {} : { robots: { index: false, follow: false } }),
     openGraph: {
       type: "article",
       title: post.title,
       description: post.description,
       url: `${site.url}/blog/${post.slug}`,
-      publishedTime: post.date,
-      modifiedTime: post.date,
-      section: post.category,
+      ...(post.date ? { publishedTime: post.date, modifiedTime: post.date } : {}),
       authors: [site.name],
       // The image itself comes from the sibling opengraph-image.tsx.
     },
@@ -52,7 +50,7 @@ export default async function PostPage({ params }: Props) {
   const post = getPost(slug);
   if (!post) notFound();
 
-  const more = getReleasedPosts()
+  const more = getListedPosts()
     .filter((p) => p.slug !== post.slug)
     .slice(0, 2);
   const headings = getHeadings(post);
@@ -60,12 +58,8 @@ export default async function PostPage({ params }: Props) {
   const url = `${site.url}/blog/${post.slug}`;
 
   /**
-   * Article, BreadcrumbList and, where the post has one, FAQPage.
-   *
-   * The FAQ block is what lets a direct question ("what is a mobile
-   * phlebotomist") surface the answer itself rather than a bare link. The
-   * breadcrumb gives the result a "Lab Ladies › Blog › …" trail instead of a
-   * raw URL. The publisher points at the site-wide `#business` node rather
+   * Article and BreadcrumbList. The breadcrumb gives the result a
+   * "Lab Ladies › Blog › ..." trail instead of a raw URL. The publisher points at the site-wide `#business` node rather
    * than restating the business, so the two can never drift apart.
    */
   const jsonLd = [
@@ -75,10 +69,8 @@ export default async function PostPage({ params }: Props) {
       "@id": `${url}#article`,
       headline: post.title,
       description: post.description,
-      datePublished: post.date,
-      dateModified: post.date,
+      ...(post.date ? { datePublished: post.date, dateModified: post.date } : {}),
       inLanguage: "en-US",
-      articleSection: post.category,
       // The stable site-wide card, not the per-post one: Next appends a
       // build-generated hash to generated image routes, so a hand-written URL
       // to the per-post image 404s, and a broken schema image is a Search
@@ -110,19 +102,6 @@ export default async function PostPage({ params }: Props) {
         { "@type": "ListItem", position: 3, name: post.title, item: url },
       ],
     },
-    ...(post.faq?.length
-      ? [
-          {
-            "@context": "https://schema.org",
-            "@type": "FAQPage",
-            mainEntity: post.faq.map((f) => ({
-              "@type": "Question",
-              name: f.q,
-              acceptedAnswer: { "@type": "Answer", text: f.a },
-            })),
-          },
-        ]
-      : []),
   ];
 
   return (
@@ -139,8 +118,16 @@ export default async function PostPage({ params }: Props) {
             {post.title}
           </h1>
           <p className="mt-5 text-white/85">
-            <time dateTime={post.date}>{formatPostDate(post.date)}</time>
-            {" · "}
+            {post.date ? (
+              <>
+                <time dateTime={post.date}>{formatPostDate(post.date)}</time>
+                {" · "}
+              </>
+            ) : (
+              <span className="mr-3 inline-block rounded-full bg-white/15 px-3 py-1 text-sm font-bold ring-1 ring-white/50 ring-inset">
+                Preview, not released
+              </span>
+            )}
             {post.readMinutes} min read
           </p>
         </div>
@@ -165,8 +152,8 @@ export default async function PostPage({ params }: Props) {
             <div className="mt-14">
               <Heading as="h3">Sources</Heading>
               <ol className="mt-5 list-decimal space-y-3 pl-6 marker:font-bold marker:text-brand-ink">
-                {post.sources.map((s) => (
-                  <li key={s.title} className="pl-1">
+                {post.sources.map((s, i) => (
+                  <li key={`${i}-${s.title}`} className="pl-1">
                     {s.url && /^https?:\/\//i.test(s.url) ? (
                       <a
                         href={s.url}
@@ -183,19 +170,6 @@ export default async function PostPage({ params }: Props) {
                   </li>
                 ))}
               </ol>
-            </div>
-          ) : null}
-
-          {post.faq?.length ? (
-            <div className="mt-14">
-              <Heading as="h3">Common questions</Heading>
-              <div className="mt-6 space-y-3">
-                {post.faq.map((f) => (
-                  <Accordion key={f.q} title={f.q}>
-                    <p>{f.a}</p>
-                  </Accordion>
-                ))}
-              </div>
             </div>
           ) : null}
 
@@ -220,11 +194,6 @@ export default async function PostPage({ params }: Props) {
                       href={`/blog/${p.slug}`}
                       className="block h-full rounded-2xl border border-cream-deep bg-white p-6 transition-colors hover:border-brand/40"
                     >
-                      {p.category && (
-                        <p className="mb-2 text-xs font-bold tracking-[0.14em] text-brand-ink uppercase">
-                          {p.category}
-                        </p>
-                      )}
                       <p className="font-bold text-balance">{p.title}</p>
                     </Link>
                   </li>

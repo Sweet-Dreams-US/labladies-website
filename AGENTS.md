@@ -208,20 +208,29 @@ runtime and the build will not catch it.
 
 Added for the "keep us near the top for mobile phlebotomist" ask on the call.
 
-- Two sources feed one list. The original posts are typed data in
-  `src/lib/blog.ts`. New posts are markdown in `content/blog/YYYY-MM-DD-<slug>.md`
-  (format and release rules: `Sweet Dreams/BLOG-FORMAT.md`; parser in
-  `src/lib/blog-markdown.ts`). A post shows on and after `release_on` in
-  America/Indiana/Indianapolis time; before that it 404s and is left out of the
-  index, sitemap, llms.txt and nav. Pages revalidate hourly, so no deploy is
-  needed. The Blog nav link appears only once a post is released (`getNav()`).
+- Posts come only from markdown in `content/blog/` (numbered files from the
+  client blog folder; format and release rules: `Sweet Dreams/BLOG-FORMAT.md`
+  and the client's `BLOG-RULES.md`; parser in `src/lib/blog-markdown.ts`).
+  Keep `post_id` unchanged; the loader de-duplicates on it, dated copy wins.
+  A post shows on and after `release_on` in America/Indiana/Indianapolis time;
+  before that it 404s and is left out of the index, sitemap, llms.txt and
+  strict nav. Pages revalidate hourly, so no deploy is needed.
+- Non-production deploys (`VERCEL_ENV` not production) also list posts with no
+  `release_on`, marked "Preview, not released" and noindex, so they can be
+  reviewed. Production shows nothing until a post's `release_on`. `/blog` with
+  no posts is a short noindex empty state, not a 404.
+- Links inside a `:::tip` render as brand buttons under the tip text.
+- The five posts once typed into `blog.ts` were taken off the blog on
+  2026-09-30. Their text is in the client's `blog/extra/` folder and their old
+  URLs redirect to `/blog` (`next.config.ts`).
+- The Blog nav link appears once a post is released (`getNav()`); the site
+  layout passes `includeUnreleased` so preview reviewers can reach it.
 - Cadence is every other week. Posts exist to answer what people type before
   they call.
 - All the site content rules above apply to posts: say what we do and never
   what we don't, no children or pediatric copy, no naming third-party
   laboratories as partners, hedge the diaper-swab PCR claim, and never state
   or imply what a result means.
-- `faq` on a post renders both as accordions and as FAQPage schema.
 
 # SEO & metadata plumbing
 
