@@ -3,7 +3,7 @@ post_id: ac794eb9-ee53-4e46-9034-72337e0a4d67
 seq: 1
 title: What a medical laboratory test is, in plain words
 slug: what-is-a-lab-test
-release_on:
+release_on: 2026-09-30
 description: A plain guide to what a lab test is, what samples are used, why doctors order tests, and how results are read, for patients and caregivers.
 reading_minutes: 6
 topic_id: d2f2861b-f1fe-4ef0-9343-dad48f40dea6

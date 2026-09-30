@@ -3,7 +3,7 @@ post_id: b2a54957-8a5f-43af-b133-0aa4a32e6d9e
 seq: 3
 title: Who performs lab tests and who explains the results
 slug: who-performs-lab-tests
-release_on:
+release_on: 2026-11-30
 description: The people behind a lab test, from the provider who orders it to the person who collects it, the lab staff who run it and who explains it.
 reading_minutes: 6
 topic_id: c4b13c42-7a60-4536-9532-cce80ef9bb3d

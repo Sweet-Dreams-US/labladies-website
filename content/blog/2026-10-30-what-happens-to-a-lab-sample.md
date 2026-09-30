@@ -3,7 +3,7 @@ post_id: 7a83a903-1059-470c-9e43-978b102cb23e
 seq: 2
 title: What happens to a lab sample after it is collected
 slug: what-happens-to-a-lab-sample
-release_on:
+release_on: 2026-10-30
 description: A plain guide to the path a blood or urine sample takes after collection, from the label on the tube to the lab and back to your doctor.
 reading_minutes: 6
 topic_id: 3fa68d1b-0679-462e-b2e6-8d4119ac35a3
