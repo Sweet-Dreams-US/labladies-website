@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { GoogleLinks, hasGoogleLinks } from "@/components/GoogleLinks";
+import { ReviewMarquee } from "@/components/ReviewMarquee";
+import { listPublicReviews } from "@/lib/reviews";
 import { getSiteSettings } from "@/lib/settings";
 import Image from "next/image";
 import {
@@ -51,7 +53,7 @@ const trustChips = [
 ];
 
 export default async function HomePage() {
-  const settings = await getSiteSettings();
+  const [settings, reviews] = await Promise.all([getSiteSettings(), listPublicReviews()]);
 
   return (
     <>
@@ -232,25 +234,48 @@ export default async function HomePage() {
         </div>
       </Section>
 
-      {/* Reviews — only once Michelle has added a Google link in the admin. */}
-      {hasGoogleLinks(settings) && (
-      <div className="bg-cream">
-        <Section>
-          <div className="flex flex-col items-center text-center">
-            <div className="flex gap-1 text-brand">
-              {Array.from({ length: 5 }, (_, i) => (
-                <StarIcon key={i} className="h-7 w-7" />
-              ))}
-            </div>
-            <Heading className="mt-5">Cared for by Lab Ladies?</Heading>
-            <Lead className="mt-4 text-center">
-              Reviews help other families in South Florida find compassionate, nurse-led lab care.
-              We&rsquo;d be grateful if you shared your experience.
-            </Lead>
-            <GoogleLinks settings={settings} className="mt-8" />
-          </div>
-        </Section>
-      </div>
+      {/*
+        Reviews. With reviews (added in /admin/reviews), they lead as a
+        scrolling strip and the Google buttons follow. With none, the section
+        is just the "leave us a review" ask — and only once a Google link
+        exists, so it never shows a button that goes nowhere.
+      */}
+      {(reviews.length > 0 || hasGoogleLinks(settings)) && (
+        <div className="bg-cream">
+          <Section>
+            {reviews.length > 0 ? (
+              <>
+                <div className="text-center">
+                  <Eyebrow>Reviews</Eyebrow>
+                  <Heading>What families say about Lab Ladies</Heading>
+                </div>
+                <div className="mt-10">
+                  <ReviewMarquee reviews={reviews} />
+                </div>
+                {hasGoogleLinks(settings) && (
+                  <div className="mt-10 flex flex-col items-center text-center">
+                    <p className="text-lg text-muted">Cared for by Lab Ladies? We&rsquo;d be grateful for a review.</p>
+                    <GoogleLinks settings={settings} className="mt-5" />
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="flex flex-col items-center text-center">
+                <div className="flex gap-1 text-brand">
+                  {Array.from({ length: 5 }, (_, i) => (
+                    <StarIcon key={i} className="h-7 w-7" />
+                  ))}
+                </div>
+                <Heading className="mt-5">Cared for by Lab Ladies?</Heading>
+                <Lead className="mt-4 text-center">
+                  Reviews help other families in South Florida find compassionate, nurse-led lab
+                  care. We&rsquo;d be grateful if you shared your experience.
+                </Lead>
+                <GoogleLinks settings={settings} className="mt-8" />
+              </div>
+            )}
+          </Section>
+        </div>
       )}
 
       {/* Final CTA */}

@@ -36,7 +36,24 @@ const nextConfig: NextConfig = {
       "what-is-a-mobile-phlebotomist",
     ].map((slug) => ({ source: `/blog/${slug}`, destination: "/blog", permanent: true }));
 
-    return [...removedPosts, ...redirectHosts.map((host) => ({
+    /**
+     * Pages from the old site on labladies.net that Google still had indexed
+     * on 26 Oct 2026 (/about-us-2, /our-services). Each goes straight to its
+     * new page on the official domain in one hop, from any host, so the
+     * ranking they earned carries over instead of ending in a 404. These only
+     * take effect for .net once labladies.net points at Vercel again — GoDaddy
+     * Forwarding sends every .net path to the homepage, or 404s it.
+     */
+    const oldSitePages = [
+      ["/about-us-2", "/about"],
+      ["/about-us", "/about"],
+      ["/our-services", "/services"],
+      ["/services-2", "/services"],
+      ["/contact-us", "/contact"],
+      ["/home", "/"],
+    ].map(([source, to]) => ({ source, destination: `${site.url}${to}`, permanent: true }));
+
+    return [...oldSitePages, ...removedPosts, ...redirectHosts.map((host) => ({
       // Everything except the cron endpoint. Vercel calls the cron on the
       // production domain and does not follow redirects; if the primary
       // domain were ever set to an alias, a 308 here would silently stop the

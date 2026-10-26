@@ -274,6 +274,32 @@ a `fetch` tagged with a cache tag, and the admin route calls
 checks straight after saving. `updateTag` only works in Server Actions, not route
 handlers. Proven in a production build on 29 Sep: saved → live on the next load.
 
+# Reviews (homepage strip + /admin/reviews)
+
+`ll_reviews`, managed in /admin/reviews, shown by `ReviewMarquee` on the
+homepage as one auto-scrolling row (pure CSS; pauses on hover and focus;
+reduced-motion gets a still, swipeable row — it must opt out of the global
+reduced-motion rule or the loop flickers). Publishing uses the same
+tag-expiry pattern as settings.
+
+- **The database decides what's public:** only `visible` rows rated 4–5. Never
+  move that rule into code alone.
+- Reviews are pasted word for word from where they were left; never written or
+  edited by us, and never invented. Names display as first name + last initial.
+  Skip any review that mentions a patient's health details.
+- **No review schema.** Google ignores self-serving LocalBusiness/Organization
+  review markup and can treat it as spam. Don't add AggregateRating.
+- As of 26 Oct 2026 Lab Ladies has **no Google Business Profile**, so the table
+  starts empty and the strip is hidden until the first good review is added.
+
+# Old site (labladies.net)
+
+There *was* an older site on labladies.net; Google still indexed /about-us-2
+and /our-services on 26 Oct 2026 (the Wayback Machine had nothing, which is why
+this was missed at launch). `oldSitePages` in next.config.ts maps them to the
+new pages in one hop — effective once labladies.net points at Vercel again;
+GoDaddy Forwarding sends every .net path to the homepage or a 404.
+
 # Service-area pages (`/areas`)
 
 42 towns in `src/lib/areas.ts`. Each has its own intro written about that town —

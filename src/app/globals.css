@@ -57,3 +57,41 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Review strip (components/ReviewMarquee.tsx). The track holds two identical
+   copies; sliding it left by half loops seamlessly. Paused on hover/focus.
+--------------------------------------------------------------------------- */
+@keyframes ll-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.ll-marquee-track {
+  animation: ll-marquee var(--ll-marquee-duration, 60s) linear infinite;
+}
+
+.ll-marquee:hover .ll-marquee-track,
+.ll-marquee:focus-within .ll-marquee-track {
+  animation-play-state: paused;
+}
+
+/* Overrides the site-wide reduced-motion rule above, which would turn an
+   infinite loop into a flicker: no movement at all, swipe to read instead. */
+@media (prefers-reduced-motion: reduce) {
+  .ll-marquee {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+  }
+  .ll-marquee-track {
+    animation: none !important;
+    transform: none !important;
+  }
+  .ll-marquee-track > [aria-hidden="true"] {
+    display: none;
+  }
+}
