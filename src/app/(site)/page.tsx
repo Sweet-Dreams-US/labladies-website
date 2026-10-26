@@ -11,7 +11,6 @@ import {
   partnerIcons,
   PinIcon,
   ShieldIcon,
-  StarIcon,
 } from "@/components/Icons";
 import {
   CallButton,
@@ -235,43 +234,26 @@ export default async function HomePage() {
       </Section>
 
       {/*
-        Reviews. With reviews (added in /admin/reviews), they lead as a
-        scrolling strip and the Google buttons follow. With none, the section
-        is just the "leave us a review" ask — and only once a Google link
-        exists, so it never shows a button that goes nowhere.
+        Reviews — only once at least one has been added in /admin/reviews
+        (Cole, 26 Oct 2026: no section at all until there's a review to show).
+        The Google buttons ride along underneath when their links are set.
       */}
-      {(reviews.length > 0 || hasGoogleLinks(settings)) && (
+      {reviews.length > 0 && (
         <div className="bg-cream">
           <Section>
-            {reviews.length > 0 ? (
-              <>
-                <div className="text-center">
-                  <Eyebrow>Reviews</Eyebrow>
-                  <Heading>What families say about Lab Ladies</Heading>
-                </div>
-                <div className="mt-10">
-                  <ReviewMarquee reviews={reviews} />
-                </div>
-                {hasGoogleLinks(settings) && (
-                  <div className="mt-10 flex flex-col items-center text-center">
-                    <p className="text-lg text-muted">Cared for by Lab Ladies? We&rsquo;d be grateful for a review.</p>
-                    <GoogleLinks settings={settings} className="mt-5" />
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="flex flex-col items-center text-center">
-                <div className="flex gap-1 text-brand">
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <StarIcon key={i} className="h-7 w-7" />
-                  ))}
-                </div>
-                <Heading className="mt-5">Cared for by Lab Ladies?</Heading>
-                <Lead className="mt-4 text-center">
-                  Reviews help other families in South Florida find compassionate, nurse-led lab
-                  care. We&rsquo;d be grateful if you shared your experience.
-                </Lead>
-                <GoogleLinks settings={settings} className="mt-8" />
+            <div className="text-center">
+              <Eyebrow>Reviews</Eyebrow>
+              <Heading>What families say about Lab Ladies</Heading>
+            </div>
+            <div className="mt-10">
+              <ReviewMarquee reviews={reviews} />
+            </div>
+            {hasGoogleLinks(settings) && (
+              <div className="mt-10 flex flex-col items-center text-center">
+                <p className="text-lg text-muted">
+                  Cared for by Lab Ladies? We&rsquo;d be grateful for a review.
+                </p>
+                <GoogleLinks settings={settings} className="mt-5" />
               </div>
             )}
           </Section>
