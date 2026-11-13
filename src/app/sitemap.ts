@@ -4,8 +4,11 @@ import { getReleasedPosts } from "@/lib/blog";
 import { getNav } from "@/lib/nav";
 import { site, siteUpdated } from "@/lib/site";
 
-// Unreleased posts stay out, and a post joins as soon as its date arrives.
-export const revalidate = 3600;
+// Unreleased posts stay out, and a post joins as soon as its date arrives. Built
+// at request time: a route level `revalidate` here left the sitemap frozen at
+// its build time contents on Vercel, so a post released after a deploy never
+// reached it. The file reads are small, so nothing is gained by caching.
+export const dynamic = "force-dynamic";
 
 /**
  * Sitemap for labladies.com.
